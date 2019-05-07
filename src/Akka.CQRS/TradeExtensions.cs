@@ -6,7 +6,7 @@
 
 using Akka.CQRS.Events;
 
-namespace Akka.CQRS.Matching
+namespace Akka.CQRS
 {
     /// <summary>
     /// Extension methods for working with <see cref="Bid"/>, <see cref="Ask"/>, and <see cref="Trade"/>.

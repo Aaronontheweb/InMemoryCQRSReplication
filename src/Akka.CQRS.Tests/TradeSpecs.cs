@@ -3,7 +3,7 @@ using Akka.CQRS.Events;
 using FluentAssertions;
 using Xunit;
 
-namespace Akka.CQRS.Matching.Tests
+namespace Akka.CQRS.Tests
 {
     public class TradeSpecs
     {

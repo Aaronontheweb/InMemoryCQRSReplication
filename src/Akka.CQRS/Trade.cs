@@ -5,17 +5,16 @@
 // -----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Akka.CQRS.Events;
 
-namespace Akka.CQRS.Matching
+namespace Akka.CQRS
 {
     /// <summary>
     /// Represents an unfilled or partially unfilled trade inside the matching engine.
     /// </summary>
-    public struct Trade : IWithTradeId, IWithStockId
+    public struct Trade : IWithTradeId, IWithStockId, IEquatable<Trade>
     {
         /// <summary>
         /// Represents an empty or completed trade.
@@ -69,6 +68,32 @@ namespace Akka.CQRS.Matching
             }
 
             return new Trade(TradeId, StockId, Side, OriginalQuantity, Price, TimeIssued, Fills.Add(fill));
+        }
+
+        public bool Equals(Trade other)
+        {
+            return string.Equals(TradeId, other.TradeId);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is Trade other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return TradeId.GetHashCode();
+        }
+
+        public static bool operator ==(Trade left, Trade right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(Trade left, Trade right)
+        {
+            return !left.Equals(right);
         }
     }
 }
