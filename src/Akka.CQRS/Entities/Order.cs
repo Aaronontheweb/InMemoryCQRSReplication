@@ -72,6 +72,9 @@ namespace Akka.CQRS
 
         public bool Match(Order opposite)
         {
+            if(Side == opposite.Side)
+                throw new InvalidOperationException($"Can't match order {OrderId} with {opposite.OrderId} for {StockId} - both trades are on the [{Side}] side!");
+
             switch (Side)
             {
                 case TradeSide.Buy:

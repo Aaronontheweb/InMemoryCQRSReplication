@@ -82,11 +82,69 @@ namespace Akka.CQRS.Matching
                 events.Add(match);
             }
 
+            // need to rebuild the bids that have been modified
+            RebuildBidIndex();
+
             if (!order.Completed) // Ask was not completely filled
             {
                 // need to save it back into matching engine
                 _asks[order.OrderId] = order;
                 RebuildAskIndex();
+            }
+
+            return events;
+        }
+
+        public IEnumerable<ITradeEvent> WithBid(Bid b)
+        {
+            if (BidTrades.ContainsKey(b.OrderId))
+            {
+                _logger.Warning("Already have trade with ID {0} recorded for symbol {1}. Ignoring duplicate Bid.", b.OrderId, b.StockId);
+                return EmptyTradeEvents;
+            }
+
+            var order = b.ToOrder();
+
+            var (hasMatch, matches) = HasMatches(order, AsksByPrice);
+            if (!hasMatch) // no matches
+            {
+                /*
+                 * Save order into our matching system and rebuild the index.
+                 */
+                _bids[order.OrderId] = order;
+                RebuildBidIndex();
+                return EmptyTradeEvents; // no new events
+            }
+
+            var events = new List<ITradeEvent>();
+            var time = _timestamper.Now;
+
+            // process all matches
+            foreach (var e in matches)
+            {
+                var (bidFill, askFill) = FillOrders(e, order, _timestamper);
+
+                events.Add(askFill);
+                events.Add(bidFill);
+
+                order = order.WithFill(bidFill);
+
+                // Update bid-side matching engine state
+                UpdateOrder(e, askFill, _asks);
+
+                // generate match notification
+                var match = new Match(order.StockId, e.OrderId, order.OrderId, askFill.Price, askFill.Quantity, time);
+                events.Add(match);
+            }
+
+            // need to rebuild the Asks that have been modified
+            RebuildAskIndex();
+
+            if (!order.Completed) // Ask was not completely filled
+            {
+                // need to save it back into matching engine
+                _bids[order.OrderId] = order;
+                RebuildBidIndex();
             }
 
             return events;
