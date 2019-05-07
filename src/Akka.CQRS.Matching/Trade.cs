@@ -71,5 +71,4 @@ namespace Akka.CQRS.Matching
             return new Trade(TradeId, StockId, Side, OriginalQuantity, Price, TimeIssued, Fills.Add(fill));
         }
     }
-
 }

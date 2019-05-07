@@ -9,12 +9,11 @@ namespace Akka.CQRS.Events
     /// </summary>
     public sealed class Fill
     {
-        public Fill(string filledId, double quantity, decimal price, TradeSide side, string filledById, DateTimeOffset timestamp)
+        public Fill(string filledId, double quantity, decimal price, string filledById, DateTimeOffset timestamp)
         {
             FilledId = filledId;
             Quantity = quantity;
             Price = price;
-            Side = side;
             FilledById = filledById;
             Timestamp = timestamp;
         }
@@ -24,8 +23,6 @@ namespace Akka.CQRS.Events
         public double Quantity { get; }
 
         public decimal Price { get; }
-
-        public TradeSide Side { get; }
 
         public string FilledById { get; }
 
