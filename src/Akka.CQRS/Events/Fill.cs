@@ -7,18 +7,18 @@ namespace Akka.CQRS.Events
     /// <summary>
     /// Fill an open order
     /// </summary>
-    public sealed class Fill
+    public sealed class Fill : IWithOrderId
     {
-        public Fill(string filledId, double quantity, decimal price, string filledById, DateTimeOffset timestamp)
+        public Fill(string orderId, double quantity, decimal price, string filledById, DateTimeOffset timestamp)
         {
-            FilledId = filledId;
+            OrderId = orderId;
             Quantity = quantity;
             Price = price;
             FilledById = filledById;
             Timestamp = timestamp;
         }
 
-        public string FilledId { get; }
+        public string OrderId { get; }
 
         public double Quantity { get; }
 

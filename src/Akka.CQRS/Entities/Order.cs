@@ -62,12 +62,25 @@ namespace Akka.CQRS
         public Order WithFill(Fill fill)
         {
             // validate that the right fill event was sent to the right trade
-            if (!fill.FilledId.Equals(OrderId))
+            if (!fill.OrderId.Equals(OrderId))
             {
-                throw new ArgumentException($"Expected fill for tradeId {OrderId}, but instead received one for {fill.FilledId}");
+                throw new ArgumentException($"Expected fill for tradeId {OrderId}, but instead received one for {fill.OrderId}");
             }
 
             return new Order(OrderId, StockId, Side, OriginalQuantity, Price, TimeIssued, Fills.Add(fill));
+        }
+
+        public bool Match(Order opposite)
+        {
+            switch (Side)
+            {
+                case TradeSide.Buy:
+                    return opposite.Price <= Price;
+                case TradeSide.Sell:
+                    return opposite.Price >= Price;
+                default:
+                    throw new ArgumentException($"Unrecognized TradeSide option [{Side}]");
+            }
         }
 
         public bool Equals(Order other)
