@@ -8,10 +8,18 @@ using Akka.Event;
 
 namespace Akka.CQRS.Matching
 {
+    /// <summary>
+    /// The matching engine for a single ticker symbol.
+    /// </summary>
     public sealed class MatchingEngine
     {
         public static readonly IEnumerable<ITradeEvent> EmptyTradeEvents = new ITradeEvent[0];
         public static readonly IEnumerable<Order> EmptyOrders = new Order[0];
+
+        public MatchingEngine(string stockId, ILoggingAdapter logger = null, ITimestamper timestamper = null)
+        : this(stockId, new Dictionary<string, Order>(), new Dictionary<string, Order>(), logger, timestamper)
+        {
+        }
 
         public MatchingEngine(string stockId, Dictionary<string, Order> bids, Dictionary<string, Order> asks, ILoggingAdapter logger, ITimestamper timestamper)
         {
@@ -19,7 +27,11 @@ namespace Akka.CQRS.Matching
             _bids = bids;
             _asks = asks;
             _logger = logger;
-            _timestamper = timestamper;
+            _timestamper = timestamper ?? CurrentUtcTimestamper.Instance;
+
+            // create both price indicies at startup
+            RebuildAskIndex();
+            RebuildBidIndex();
         }
 
         private readonly ITimestamper _timestamper;
@@ -44,7 +56,7 @@ namespace Akka.CQRS.Matching
         {
             if (AskTrades.ContainsKey(a.OrderId))
             {
-                _logger.Warning("Already have trade with ID {0} recorded for symbol {1}. Ignoring duplicate Ask.", a.OrderId, a.StockId);
+                _logger?.Warning("Already have trade with ID {0} recorded for symbol {1}. Ignoring duplicate Ask.", a.OrderId, a.StockId);
                 return EmptyTradeEvents;
             }
 
@@ -99,7 +111,7 @@ namespace Akka.CQRS.Matching
         {
             if (BidTrades.ContainsKey(b.OrderId))
             {
-                _logger.Warning("Already have trade with ID {0} recorded for symbol {1}. Ignoring duplicate Bid.", b.OrderId, b.StockId);
+                _logger?.Warning("Already have trade with ID {0} recorded for symbol {1}. Ignoring duplicate Bid.", b.OrderId, b.StockId);
                 return EmptyTradeEvents;
             }
 
