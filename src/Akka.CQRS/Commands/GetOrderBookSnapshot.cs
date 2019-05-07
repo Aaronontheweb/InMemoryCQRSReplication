@@ -20,6 +20,7 @@ namespace Akka.CQRS.Commands
         Summary
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Query the current order book snapshot
     /// </summary>
