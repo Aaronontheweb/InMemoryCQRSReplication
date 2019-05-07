@@ -4,6 +4,9 @@ using System.Text;
 
 namespace Akka.CQRS.Events
 {
+    /// <summary>
+    /// Matches a buy / sell-side order
+    /// </summary>
     public sealed class Match : IWithStockId
     {
         public Match(string stockId, decimal settlementPrice, double quantity, DateTimeOffset timeStamp)

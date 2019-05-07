@@ -8,8 +8,18 @@ namespace Akka.CQRS
     /// <summary>
     /// The full state of the current order book for a given <see cref="IWithStockId"/>.
     /// </summary>
-    public class OrderbookSnapshot : IWithStockId
+    public sealed class OrderbookSnapshot : IWithStockId
     {
+        public OrderbookSnapshot(string stockId, DateTimeOffset timestamp, double askQuantity, double bidQuantity, IReadOnlyCollection<Ask> asks, IReadOnlyCollection<Bid> bids)
+        {
+            StockId = stockId;
+            Timestamp = timestamp;
+            AskQuantity = askQuantity;
+            BidQuantity = bidQuantity;
+            Asks = asks;
+            Bids = bids;
+        }
+
         public string StockId { get; }
 
         public DateTimeOffset Timestamp { get; }
@@ -21,24 +31,5 @@ namespace Akka.CQRS
         public IReadOnlyCollection<Ask> Asks { get; }
 
         public IReadOnlyCollection<Bid> Bids { get; }
-    }
-
-    /// <summary>
-    /// Represents a price band, typically weighted by buy/sell volume.
-    /// </summary>
-    public struct PriceRange
-    {
-        public PriceRange(decimal min, decimal mean, decimal max)
-        {
-            Min = min;
-            Mean = mean;
-            Max = max;
-        }
-
-        public decimal Min { get; }
-
-        public decimal Mean { get; }
-
-        public decimal Max { get; }
     }
 }
