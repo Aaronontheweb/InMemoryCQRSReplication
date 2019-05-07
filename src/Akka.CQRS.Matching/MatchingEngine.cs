@@ -5,7 +5,7 @@ namespace Akka.CQRS.Matching
 {
     public sealed class MatchingEngine
     {
-        public MatchingEngine(string stockId, Dictionary<string, Trade> bids, Dictionary<string, Trade> asks)
+        public MatchingEngine(string stockId, Dictionary<string, Order> bids, Dictionary<string, Order> asks)
         {
             StockId = stockId;
             _bids = bids;
@@ -17,10 +17,10 @@ namespace Akka.CQRS.Matching
         /// </summary>
         public string StockId { get; }
 
-        private readonly Dictionary<string, Trade> _bids;
-        public IReadOnlyDictionary<string, Trade> BidTrades => _bids;
+        private readonly Dictionary<string, Order> _bids;
+        public IReadOnlyDictionary<string, Order> BidTrades => _bids;
 
-        private readonly Dictionary<string, Trade> _asks;
-        public IReadOnlyDictionary<string, Trade> AskTrades => _asks;
+        private readonly Dictionary<string, Order> _asks;
+        public IReadOnlyDictionary<string, Order> AskTrades => _asks;
     }
 }

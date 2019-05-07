@@ -1,5 +1,5 @@
 ﻿// -----------------------------------------------------------------------
-// <copyright file="Trade.cs" company="Petabridge, LLC">
+// <copyright file="Order.cs" company="Petabridge, LLC">
 //      Copyright (C) 2015 - 2019 Petabridge, LLC <https://petabridge.com>
 // </copyright>
 // -----------------------------------------------------------------------
@@ -14,26 +14,26 @@ namespace Akka.CQRS
     /// <summary>
     /// Represents an unfilled or partially unfilled trade inside the matching engine.
     /// </summary>
-    public struct Trade : IWithTradeId, IWithStockId, IEquatable<Trade>
+    public struct Order : IWithOrderId, IWithStockId, IEquatable<Order>
     {
         /// <summary>
         /// Represents an empty or completed trade.
         /// </summary>
-        public static readonly Trade Empty = new Trade(string.Empty, string.Empty, TradeSide.Buy, 0.0D, 0.0m, DateTimeOffset.MinValue);
+        public static readonly Order Empty = new Order(string.Empty, string.Empty, TradeSide.Buy, 0.0D, 0.0m, DateTimeOffset.MinValue);
 
         /// <summary>
         /// Used to validating that orders have been totally filled using floating-point precision.
         /// </summary>
         public const double Epsilon = 0.001d;
 
-        public Trade(string tradeId, string stockId, TradeSide side, double originalQuantity, decimal price, DateTimeOffset timeIssued)
+        public Order(string tradeId, string stockId, TradeSide side, double originalQuantity, decimal price, DateTimeOffset timeIssued)
         : this(tradeId, stockId, side, originalQuantity, price, timeIssued, ImmutableList.Create<Fill>())
         {
         }
 
-        public Trade(string tradeId, string stockId, TradeSide side, double originalQuantity, decimal price, DateTimeOffset timeIssued, IImmutableList<Fill> fills)
+        public Order(string tradeId, string stockId, TradeSide side, double originalQuantity, decimal price, DateTimeOffset timeIssued, IImmutableList<Fill> fills)
         {
-            TradeId = tradeId;
+            OrderId = tradeId;
             StockId = stockId;
             Side = side;
             OriginalQuantity = originalQuantity;
@@ -42,7 +42,7 @@ namespace Akka.CQRS
             Fills = fills;
         }
 
-        public string TradeId { get; }
+        public string OrderId { get; }
         public string StockId { get; }
 
         public TradeSide Side { get; }
@@ -59,39 +59,39 @@ namespace Akka.CQRS
 
         public IImmutableList<Fill> Fills { get; }
 
-        public Trade WithFill(Fill fill)
+        public Order WithFill(Fill fill)
         {
             // validate that the right fill event was sent to the right trade
-            if (!fill.FilledId.Equals(TradeId))
+            if (!fill.FilledId.Equals(OrderId))
             {
-                throw new ArgumentException($"Expected fill for tradeId {TradeId}, but instead received one for {fill.FilledId}");
+                throw new ArgumentException($"Expected fill for tradeId {OrderId}, but instead received one for {fill.FilledId}");
             }
 
-            return new Trade(TradeId, StockId, Side, OriginalQuantity, Price, TimeIssued, Fills.Add(fill));
+            return new Order(OrderId, StockId, Side, OriginalQuantity, Price, TimeIssued, Fills.Add(fill));
         }
 
-        public bool Equals(Trade other)
+        public bool Equals(Order other)
         {
-            return string.Equals(TradeId, other.TradeId);
+            return string.Equals(OrderId, other.OrderId);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is Trade other && Equals(other);
+            return obj is Order other && Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return TradeId.GetHashCode();
+            return OrderId.GetHashCode();
         }
 
-        public static bool operator ==(Trade left, Trade right)
+        public static bool operator ==(Order left, Order right)
         {
             return left.Equals(right);
         }
 
-        public static bool operator !=(Trade left, Trade right)
+        public static bool operator !=(Order left, Order right)
         {
             return !left.Equals(right);
         }

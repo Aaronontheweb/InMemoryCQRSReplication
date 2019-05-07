@@ -8,7 +8,7 @@ namespace Akka.CQRS.Events
     /// <summary>
     /// Represents a "buy"-side event
     /// </summary>
-    public sealed class Bid : IWithStockId, IWithTradeId
+    public sealed class Bid : IWithStockId, IWithOrderId
     {
         public Bid(string stockId, string tradeId, decimal bidPrice, 
             double bidQuantity, DateTimeOffset timeIssued)
@@ -17,7 +17,7 @@ namespace Akka.CQRS.Events
             BidPrice = bidPrice;
             BidQuantity = bidQuantity;
             TimeIssued = timeIssued;
-            TradeId = tradeId;
+            OrderId = tradeId;
         }
 
         public string StockId { get; }
@@ -27,6 +27,6 @@ namespace Akka.CQRS.Events
         public double BidQuantity { get; }
 
         public DateTimeOffset TimeIssued { get; }
-        public string TradeId { get; }
+        public string OrderId { get; }
     }
 }

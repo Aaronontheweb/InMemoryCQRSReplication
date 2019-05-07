@@ -6,7 +6,7 @@ namespace Akka.CQRS.Events
     /// <summary>
     /// Represents a "sell"-side event
     /// </summary>
-    public sealed class Ask : IWithStockId, IWithTradeId
+    public sealed class Ask : IWithStockId, IWithOrderId
     {
         public Ask(string stockId, string tradeId, decimal askPrice, 
             double askQuantity, DateTimeOffset timeIssued)
@@ -15,7 +15,7 @@ namespace Akka.CQRS.Events
             AskPrice = askPrice;
             AskQuantity = askQuantity;
             TimeIssued = timeIssued;
-            TradeId = tradeId;
+            OrderId = tradeId;
         }
 
         public string StockId { get; }
@@ -25,6 +25,6 @@ namespace Akka.CQRS.Events
         public double AskQuantity { get; }
 
         public DateTimeOffset TimeIssued { get; }
-        public string TradeId { get; }
+        public string OrderId { get; }
     }
 }
