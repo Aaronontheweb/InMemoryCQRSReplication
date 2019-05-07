@@ -9,15 +9,21 @@ namespace Akka.CQRS.Events
     /// </summary>
     public sealed class Match : IWithStockId
     {
-        public Match(string stockId, decimal settlementPrice, double quantity, DateTimeOffset timeStamp)
+        public Match(string stockId, string buyTradeId, string sellTradeId, decimal settlementPrice, double quantity, DateTimeOffset timeStamp)
         {
             StockId = stockId;
             SettlementPrice = settlementPrice;
             Quantity = quantity;
             TimeStamp = timeStamp;
+            BuyTradeId = buyTradeId;
+            SellTradeId = sellTradeId;
         }
 
         public string StockId { get; }
+
+        public string BuyTradeId { get; }
+
+        public string SellTradeId { get; }
 
         public decimal SettlementPrice { get; }
 

@@ -6,6 +6,15 @@ using Akka.CQRS.Events;
 namespace Akka.CQRS
 {
     /// <summary>
+    /// Indicates which side of the trade this transaction occurred on.
+    /// </summary>
+    public enum TradeSide
+    {
+        Buy,
+        Sell
+    }
+
+    /// <summary>
     /// The full state of the current order book for a given <see cref="IWithStockId"/>.
     /// </summary>
     public sealed class OrderbookSnapshot : IWithStockId
