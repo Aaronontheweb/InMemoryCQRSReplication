@@ -90,7 +90,7 @@ namespace Akka.CQRS.Matching
                 UpdateOrder(e, bidFill, _bids);
 
                 // generate match notification
-                var match = new Match(order.StockId, order.OrderId, e.OrderId, askFill.Price, askFill.Quantity, time);
+                var match = new Match(order.StockId, e.OrderId, order.OrderId, askFill.Price, askFill.Quantity, time);
                 events.Add(match);
             }
 
@@ -134,7 +134,7 @@ namespace Akka.CQRS.Matching
             // process all matches
             foreach (var e in matches)
             {
-                var (bidFill, askFill) = FillOrders(e, order, _timestamper);
+                var (bidFill, askFill) = FillOrders(order, e, _timestamper);
 
                 events.Add(askFill);
                 events.Add(bidFill);
@@ -145,7 +145,7 @@ namespace Akka.CQRS.Matching
                 UpdateOrder(e, askFill, _asks);
 
                 // generate match notification
-                var match = new Match(order.StockId, e.OrderId, order.OrderId, askFill.Price, askFill.Quantity, time);
+                var match = new Match(order.StockId, order.OrderId, e.OrderId, askFill.Price, askFill.Quantity, time);
                 events.Add(match);
             }
 
@@ -212,12 +212,15 @@ namespace Akka.CQRS.Matching
             // pick the lower of the two values - if I'm buying 5 but was only sold 2, actual is 2.
             var actualSold = Math.Min(bid.RemainingQuantity, ask.RemainingQuantity);
 
+            var partialAsk = ask.RemainingQuantity > actualSold;
+            var partialBid = bid.RemainingQuantity > actualSold;
+
             // generate a fill for each order
             var time = timeService.Now;
-            var sellFill = new Fill(ask.OrderId, actualSold, settlementPrice, bid.OrderId, time);
-            var buyFill = new Fill(bid.OrderId, actualSold, settlementPrice, ask.OrderId, time);
+            var askFill = new Fill(ask.OrderId, actualSold, settlementPrice, bid.OrderId, time, partialAsk);
+            var bidFill = new Fill(bid.OrderId, actualSold, settlementPrice, ask.OrderId, time, partialBid);
 
-            return (buyFill, sellFill);
+            return (bidFill, askFill);
         }
 
         /// <summary>
