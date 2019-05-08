@@ -19,7 +19,7 @@ namespace Akka.CQRS
     /// </summary>
     public sealed class OrderbookSnapshot : IWithStockId
     {
-        public OrderbookSnapshot(string stockId, DateTimeOffset timestamp, double askQuantity, double bidQuantity, IReadOnlyCollection<Ask> asks, IReadOnlyCollection<Bid> bids)
+        public OrderbookSnapshot(string stockId, DateTimeOffset timestamp, double askQuantity, double bidQuantity, IReadOnlyCollection<Order> asks, IReadOnlyCollection<Order> bids)
         {
             StockId = stockId;
             Timestamp = timestamp;
@@ -37,8 +37,8 @@ namespace Akka.CQRS
 
         public double BidQuantity { get; }
 
-        public IReadOnlyCollection<Ask> Asks { get; }
+        public IReadOnlyCollection<Order> Asks { get; }
 
-        public IReadOnlyCollection<Bid> Bids { get; }
+        public IReadOnlyCollection<Order> Bids { get; }
     }
 }

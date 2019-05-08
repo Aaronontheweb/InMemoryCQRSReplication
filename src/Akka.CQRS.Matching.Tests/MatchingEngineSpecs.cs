@@ -92,5 +92,36 @@ namespace Akka.CQRS.Matching.Tests
             match.SettlementPrice.Should().Be(bid.BidPrice);
             match.Quantity.Should().Be(bid.BidQuantity);
         }
+
+        [Fact(DisplayName = "Should create valid OrderbookSnapshot and recreate matching engine from snapshot")]
+        public void ShouldCreateAndRecreateFromOrderbookSnapshot()
+        {
+            var ask = new Ask(TickerSymbol, "foo", 12.0m, 5.0, DateTimeOffset.Now);
+
+            // bid is lower than ask - no trades
+            var bid = new Bid(TickerSymbol, "bar", 11.0m, 4.0, DateTimeOffset.Now);
+
+            var bidEvents = _matchingEngine.WithBid(bid);
+            var askEvents = _matchingEngine.WithAsk(ask);
+            askEvents.Should().BeEmpty();
+            bidEvents.Should().BeEmpty();
+
+            _matchingEngine.AskTrades.Count.Should().Be(1);
+            _matchingEngine.BidTrades.Count.Should().Be(1);
+
+            // create a snapshot
+            var snapshot = _matchingEngine.GetSnapshot();
+
+            // add a second ask to matching engine (need to verify immutability)
+            // still higher than original bid - won't trigger any trades
+            var ask2 = new Ask(TickerSymbol, "fuber", 13.0m, 5.0, DateTimeOffset.Now);
+            var ask2Events = _matchingEngine.WithAsk(ask2);
+            ask2Events.Should().BeEmpty();
+
+            snapshot.Asks.Count.Should().Be(1);
+            snapshot.Bids.Count.Should().Be(1);
+            snapshot.StockId.Should().Be(_matchingEngine.StockId);
+            _matchingEngine.AskTrades.Count.Should().Be(2);
+        }
     }
 }
