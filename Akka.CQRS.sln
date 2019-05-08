@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.TradeProcessor.Se
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.TradeProcessor.Actors", "src\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj", "{733BA8FC-C198-4C83-BA57-FE3672CBB307}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Subscriptions", "src\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj", "{53895A69-5516-4598-8D76-32F9F2C67F0E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +65,10 @@ Global
 		{733BA8FC-C198-4C83-BA57-FE3672CBB307}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{733BA8FC-C198-4C83-BA57-FE3672CBB307}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{733BA8FC-C198-4C83-BA57-FE3672CBB307}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -75,6 +81,7 @@ Global
 		{F1EFDCB9-FD61-4782-A12A-108C73DB368E} = {08DA7279-F347-4F54-95B6-7335F52746A6}
 		{5EB6F2C5-FEF1-402A-AB76-3A9F62B2EFDE} = {E1C0B656-C8EA-4F93-8855-798548B72B13}
 		{733BA8FC-C198-4C83-BA57-FE3672CBB307} = {E1C0B656-C8EA-4F93-8855-798548B72B13}
+		{53895A69-5516-4598-8D76-32F9F2C67F0E} = {08DA7279-F347-4F54-95B6-7335F52746A6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B99E6BB8-642A-4A68-86DF-69567CBA700A}
