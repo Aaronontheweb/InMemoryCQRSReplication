@@ -20,7 +20,11 @@ namespace Akka.CQRS
 
         public int Compare(Order x, Order y)
         {
-            return x.Price.CompareTo(y.Price);
+            if (x.Price.Equals(y.Price))
+                return 0;
+            if (x.Price < y.Price)
+                return -1;
+            return 1;
         }
     }
 

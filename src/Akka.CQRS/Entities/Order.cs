@@ -14,7 +14,7 @@ namespace Akka.CQRS
     /// <summary>
     /// Represents an unfilled or partially unfilled trade inside the matching engine.
     /// </summary>
-    public struct Order : IWithOrderId, IWithStockId, IEquatable<Order>
+    public struct Order : IWithOrderId, IWithStockId, IEquatable<Order>, IComparable<Order>, IComparable
     {
         /// <summary>
         /// Represents an empty or completed trade.
@@ -110,6 +110,37 @@ namespace Akka.CQRS
         public static bool operator !=(Order left, Order right)
         {
             return !left.Equals(right);
+        }
+
+        public int CompareTo(Order other)
+        {
+            return Price.CompareTo(other.Price);
+        }
+
+        public int CompareTo(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return 1;
+            return obj is Order other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(Order)}");
+        }
+
+        public static bool operator <(Order left, Order right)
+        {
+            return left.CompareTo(right) < 0;
+        }
+
+        public static bool operator >(Order left, Order right)
+        {
+            return left.CompareTo(right) > 0;
+        }
+
+        public static bool operator <=(Order left, Order right)
+        {
+            return left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >=(Order left, Order right)
+        {
+            return left.CompareTo(right) >= 0;
         }
     }
 }

@@ -52,6 +52,30 @@ namespace Akka.CQRS.Matching
 
         public SortedSet<Order> BidsByPrice { get; private set; }
 
+        /// <summary>
+        /// Recreate a matching engine from a saved <see cref="OrderbookSnapshot"/>.
+        /// </summary>
+        /// <param name="snapshot">The order book snapshot.</param>
+        /// <param name="log">Optional. An Akka.NET logger.</param>
+        /// <param name="timestamper">Optional. The time stamping service implementation. Defaults to <see cref="CurrentUtcTimestamper"/> when <c>null</c>.</param>
+        /// <returns>A new matching engine.</returns>
+        public static MatchingEngine FromSnapshot(OrderbookSnapshot snapshot, ILoggingAdapter log = null, ITimestamper timestamper = null)
+        {
+            return new MatchingEngine(snapshot.StockId, snapshot.Bids.ToDictionary(x => x.OrderId, y=> y), 
+                snapshot.Asks.ToDictionary(x => x.OrderId, y => y), log, timestamper);
+        }
+
+        /// <summary>
+        /// Creates a point-in-time snapshot of the current order book data.
+        /// </summary>
+        /// <returns>Returns a new <see cref="OrderbookSnapshot"/> instance.</returns>
+        public OrderbookSnapshot GetSnapshot()
+        {
+            var snapshot = new OrderbookSnapshot(StockId, _timestamper.Now, AskTrades.Values.Sum(x => x.RemainingQuantity), BidTrades.Values.Sum(x => x.RemainingQuantity), 
+                AsksByPrice.ToList(), BidsByPrice.ToList());
+            return snapshot;
+        }
+
         public IEnumerable<ITradeEvent> WithAsk(Ask a)
         {
             if (AskTrades.ContainsKey(a.OrderId))
