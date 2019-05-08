@@ -7,6 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Akka.Persistence" Version="$(AkkaVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj" />
   </ItemGroup>
 
