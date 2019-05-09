@@ -18,13 +18,23 @@ namespace Akka.CQRS.Subscriptions.DistributedPubSub
             _mediator = mediator;
         }
 
+        public Task<TradeSubscribeAck> Subscribe(string tickerSymbol, IActorRef subscriber)
+        {
+            return Subscribe(tickerSymbol, TradeEventHelpers.AllTradeEventTypes, subscriber);
+        }
+
+        public Task<TradeSubscribeAck> Subscribe(string tickerSymbol, TradeEventType @event, IActorRef subscriber)
+        {
+            return Subscribe(tickerSymbol, new[] { @event }, subscriber);
+        }
+
         public async Task<TradeSubscribeAck> Subscribe(string tickerSymbol, TradeEventType[] events, IActorRef subscriber)
         {
             var tasks = ToTopics(tickerSymbol, events).Select(x =>
                 _mediator.Ask<SubscribeAck>(new Subscribe(x, subscriber), TimeSpan.FromSeconds(3)));
 
             await Task.WhenAll(tasks).ConfigureAwait(false);
-            
+
             return new TradeSubscribeAck(tickerSymbol, events);
         }
 
@@ -36,6 +46,16 @@ namespace Akka.CQRS.Subscriptions.DistributedPubSub
             await Task.WhenAll(tasks).ConfigureAwait(false);
 
             return new TradeUnsubscribeAck(tickerSymbol, events);
+        }
+
+        public Task<TradeUnsubscribeAck> Unsubscribe(string tickerSymbol, TradeEventType @event, IActorRef subscriber)
+        {
+            return Unsubscribe(tickerSymbol, new[] { @event }, subscriber);
+        }
+
+        public Task<TradeUnsubscribeAck> Unsubscribe(string tickerSymbol, IActorRef subscriber)
+        {
+            return Unsubscribe(tickerSymbol, TradeEventHelpers.AllTradeEventTypes, subscriber);
         }
 
         internal static string[] ToTopics(string tickerSymbol, TradeEventType[] events)

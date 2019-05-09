@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Akka.CQRS.Events;
 
 namespace Akka.CQRS.Subscriptions
@@ -6,8 +7,11 @@ namespace Akka.CQRS.Subscriptions
     /// <summary>
     /// Extension methods for working with <see cref="ITradeEvent"/>
     /// </summary>
-    public static class TradeEventExtensions
+    public static class TradeEventHelpers
     {
+        public static readonly TradeEventType[] AllTradeEventTypes =
+            Enum.GetValues(typeof(TradeEventType)).Cast<TradeEventType>().ToArray();
+
         public static TradeEventType ToTradeEventType(this ITradeEvent @event)
         {
             switch (@event)
