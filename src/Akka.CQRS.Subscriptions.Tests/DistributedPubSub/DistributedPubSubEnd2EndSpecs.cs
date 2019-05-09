@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Cluster;
 using Akka.Configuration;
+using Akka.CQRS.Events;
 using Akka.CQRS.Subscriptions.DistributedPubSub;
+using FluentAssertions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,8 +40,12 @@ namespace Akka.CQRS.Subscriptions.Tests.DistributedPubSub
             var published = DistributedPubSubTradeEventPublisher.For(Sys);
 
             // Subscribe to all topics
-            var subAck = await subManager.Subscribe("MSFT",
-                new[] {TradeEventType.Ask, TradeEventType.Bid, TradeEventType.Fill, TradeEventType.Match}, TestActor);
+            var subAck = await subManager.Subscribe("MSFT", TestActor);
+            subAck.TickerSymbol.Should().Be("MSFT");
+
+            var bid = new Bid("MSFT", "foo", 10.0m, 1.0d, DateTimeOffset.UtcNow);
+            published.Publish("MSFT", bid);
+            ExpectMsg<Bid>();
         }
     }
 }
