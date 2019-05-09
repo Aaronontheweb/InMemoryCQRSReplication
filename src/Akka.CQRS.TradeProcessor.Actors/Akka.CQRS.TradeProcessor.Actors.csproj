@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj" />
   </ItemGroup>
 
 </Project>
