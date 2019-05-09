@@ -1,8 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
+using Akka.Util;
+using static Akka.CQRS.Subscriptions.DistributedPubSub.DistributedPubSubTopicFormatter;
 
 namespace Akka.CQRS.Subscriptions.DistributedPubSub
 {
@@ -17,18 +18,9 @@ namespace Akka.CQRS.Subscriptions.DistributedPubSub
 
         public void Publish(string tickerSymbol, ITradeEvent @event)
         {
-            _mediator.Tell(new Publish());
-        }
-    }
-
-    /// <summary>
-    /// Formats
-    /// </summary>
-    public static class DistributedPubSubTopicFormatter
-    {
-        public static string ToTopic(string tickerSymbol, TradeEventType tradeEventType)
-        {
-            return $"{tickerSymbol}-{nameof(tradeEventType)}";
+            var eventType = @event.ToTradeEventType();
+            var topic = ToTopic(tickerSymbol, eventType);
+            _mediator.Tell(new Publish(topic, @event));
         }
     }
 }
