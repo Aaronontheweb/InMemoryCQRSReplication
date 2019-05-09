@@ -42,5 +42,11 @@ namespace Akka.CQRS.Subscriptions.DistributedPubSub
         {
             return events.Select(x => DistributedPubSubTopicFormatter.ToTopic(tickerSymbol, x)).ToArray();
         }
+
+        public static DistributedPubSubTradeEventSubscriptionManager For(ActorSystem sys)
+        {
+            var mediator = Cluster.Tools.PublishSubscribe.DistributedPubSub.Get(sys).Mediator;
+            return new DistributedPubSubTradeEventSubscriptionManager(mediator);
+        }
     }
 }

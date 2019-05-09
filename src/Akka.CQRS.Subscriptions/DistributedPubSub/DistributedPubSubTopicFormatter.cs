@@ -1,6 +1,4 @@
-﻿using System;
-using Akka.Cluster.Tools.PublishSubscribe;
-using Akka.CQRS.Events;
+﻿using Akka.Cluster.Tools.PublishSubscribe;
 
 namespace Akka.CQRS.Subscriptions.DistributedPubSub
 {
@@ -12,23 +10,6 @@ namespace Akka.CQRS.Subscriptions.DistributedPubSub
         public static string ToTopic(string tickerSymbol, TradeEventType tradeEventType)
         {
             return $"{tickerSymbol}-{nameof(tradeEventType)}";
-        }
-
-        public static TradeEventType ToTradeEventType(this ITradeEvent @event)
-        {
-            switch (@event)
-            {
-                case Bid b:
-                    return TradeEventType.Bid;
-                case Ask a:
-                    return TradeEventType.Ask;
-                case Fill f:
-                    return TradeEventType.Fill;
-                case Match m:
-                    return TradeEventType.Match;
-                default:
-                    throw new ArgumentOutOfRangeException($"[{@event}] is not a supported trade event type.", nameof(@event));
-            }
         }
     }
 }
