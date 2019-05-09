@@ -14,8 +14,16 @@ namespace Akka.CQRS.Subscriptions
     /// </summary>
     public interface ITradeEventSubscriptionManager
     {
+        Task<TradeSubscribeAck> Subscribe(string tickerSymbol, IActorRef subscriber);
+
+        Task<TradeSubscribeAck> Subscribe(string tickerSymbol, TradeEventType @event, IActorRef subscriber);
+
         Task<TradeSubscribeAck> Subscribe(string tickerSymbol, TradeEventType[] events, IActorRef subscriber);
 
         Task<TradeUnsubscribeAck> Unsubscribe(string tickerSymbol, TradeEventType[] events, IActorRef subscriber);
+
+        Task<TradeUnsubscribeAck> Unsubscribe(string tickerSymbol, TradeEventType @event, IActorRef subscriber);
+
+        Task<TradeUnsubscribeAck> Unsubscribe(string tickerSymbol, IActorRef subscriber);
     }
 }
