@@ -3,15 +3,15 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetStandardVersion)</TargetFramework>
-    <Description>Matching engine logic.</Description>
+    <Description>Matching engine actors.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka" Version="$(AkkaVersion)" />
+    <PackageReference Include="Akka.Persistence" Version="$(AkkaVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj" />
   </ItemGroup>
 
 </Project>

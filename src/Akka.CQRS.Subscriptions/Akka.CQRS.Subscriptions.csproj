@@ -3,15 +3,14 @@
 
   <PropertyGroup>
     <TargetFramework>$(NetStandardVersion)</TargetFramework>
-    <Description>Matching engine logic.</Description>
+    <Description>Pub-sub abstractions</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka" Version="$(AkkaVersion)" />
+    <PackageReference Include="Akka.Cluster.Tools" Version="$(AkkaVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
   </ItemGroup>
-
 </Project>
