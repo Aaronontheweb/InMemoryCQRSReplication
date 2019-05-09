@@ -7,6 +7,7 @@ using Akka.CQRS.Events;
 using Akka.CQRS.Matching;
 using Akka.CQRS.Subscriptions;
 using Akka.CQRS.Subscriptions.DistributedPubSub;
+using Akka.CQRS.Subscriptions.NoOp;
 using Akka.Event;
 using Akka.Persistence;
 using Akka.Persistence.Extras;
@@ -30,8 +31,8 @@ namespace Akka.CQRS.TradeProcessor.Actors
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
-        public OrderBookActor(string tickerSymbol, IActorRef confirmationActor) : this(tickerSymbol, null, DistributedPubSubTradeEventPublisher.For(Context.System), confirmationActor, subscriptionManager) { }
-        public OrderBookActor(string tickerSymbol, MatchingEngine matchingEngine, ITradeEventPublisher publisher, IActorRef confirmationActor, ITradeEventSubscriptionManager subscriptionManager)
+        public OrderBookActor(string tickerSymbol, IActorRef confirmationActor) : this(tickerSymbol, null, DistributedPubSubTradeEventPublisher.For(Context.System), NoOpTradeEventSubscriptionManager.Instance, confirmationActor) { }
+        public OrderBookActor(string tickerSymbol, MatchingEngine matchingEngine, ITradeEventPublisher publisher, ITradeEventSubscriptionManager subscriptionManager, IActorRef confirmationActor)
         {
             TickerSymbol = tickerSymbol;
             _matchingEngine = matchingEngine ?? CreateDefaultMatchingEngine(tickerSymbol, _log);
@@ -62,10 +63,10 @@ namespace Akka.CQRS.TradeProcessor.Actors
             });
 
             Recover<Bid>(b => { _matchingEngine.WithBid(b); });
-            Recover<Ask>(a => { _matchingEngine.WithAsk(a);});
+            Recover<Ask>(a => { _matchingEngine.WithAsk(a); });
 
             // Fill and Match can't modify the state of the MatchingEngine.
-            Recover<Match>(m => { }); 
+            Recover<Match>(m => { });
             Recover<Fill>(f => { });
         }
 
@@ -73,10 +74,10 @@ namespace Akka.CQRS.TradeProcessor.Actors
         {
             Command<ConfirmableMessage<Ask>>(a =>
             {
-                
+
                 // For the sake of efficiency - update orderbook and then persist all events
                 var events = _matchingEngine.WithAsk(a.Message);
-                var persistableEvents = new ITradeEvent[] {a.Message}.Concat<ITradeEvent>(events); // ask needs to go before Fill / Match
+                var persistableEvents = new ITradeEvent[] { a.Message }.Concat<ITradeEvent>(events); // ask needs to go before Fill / Match
 
                 PersistAll(persistableEvents, @event =>
                 {
@@ -121,9 +122,46 @@ namespace Akka.CQRS.TradeProcessor.Actors
             /*
              * Handle subscriptions directly in case we're using in-memory, local pub-sub.
              */
-            Command<TradeSubscribe>(sub =>
+            CommandAsync<TradeSubscribe>(async sub =>
+                {
+                    try
+                    {
+                        var ack = await _subscriptionManager.Subscribe(PersistenceId, sub.Events, sub.Subscriber);
+                        Context.Watch(sub.Subscriber);
+                        sub.Subscriber.Tell(ack);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error(ex, "Error while processing subscription {0}", sub);
+                        sub.Subscriber.Tell(new TradeSubscribeNack(TickerSymbol, sub.Events, ex.Message));
+                    }
+                });
+
+            CommandAsync<TradeUnsubscribe>(async unsub =>
             {
-                
+                try
+                {
+                    var ack = await _subscriptionManager.Unsubscribe(PersistenceId, unsub.Events, unsub.Subscriber);
+                    // leave DeathWatch intact, in case actor is still subscribed to additional topics
+                    unsub.Subscriber.Tell(ack);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Error while processing unsubscription {0}", unsub);
+                    unsub.Subscriber.Tell(new TradeUnsubscribeNack(TickerSymbol, unsub.Events, ex.Message));
+                }
+            });
+
+            CommandAsync<Terminated>(async t =>
+            {
+                try
+                {
+                    var ack = await _subscriptionManager.Unsubscribe(PersistenceId, t.ActorRef);
+                }
+                catch (Exception ex)
+                {
+                    _log.Error(ex, "Error while processing unsubscription for terminated subscriber {0} for symbol {1}", t.ActorRef, TickerSymbol);
+                }
             });
 
             Command<GetOrderBookSnapshot>(s =>
