@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Xml;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Util;
@@ -7,6 +8,9 @@ using static Akka.CQRS.Subscriptions.DistributedPubSub.DistributedPubSubTopicFor
 
 namespace Akka.CQRS.Subscriptions.DistributedPubSub
 {
+    /// <summary>
+    /// <see cref="ITradeEventPublisher"/> used for distributing events over the <see cref="DistributedPubSub.Mediator"/>.
+    /// </summary>
     public sealed class DistributedPubSubTradeEventPublisher : ITradeEventPublisher
     {
         private readonly IActorRef _mediator;
