@@ -17,19 +17,21 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{79D71264
 		build.sh = build.sh
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Matching", "src\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj", "{F6F74FCA-8E53-4620-90C7-9A91278A3521}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Matching", "src\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj", "{F6F74FCA-8E53-4620-90C7-9A91278A3521}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Matching.Tests", "src\Akka.CQRS.Matching.Tests\Akka.CQRS.Matching.Tests.csproj", "{F1EFDCB9-FD61-4782-A12A-108C73DB368E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Matching.Tests", "src\Akka.CQRS.Matching.Tests\Akka.CQRS.Matching.Tests.csproj", "{F1EFDCB9-FD61-4782-A12A-108C73DB368E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libraries", "libraries", "{08DA7279-F347-4F54-95B6-7335F52746A6}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "trade-platform", "trade-platform", "{E1C0B656-C8EA-4F93-8855-798548B72B13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.TradeProcessor.Service", "src\Akka.CQRS.TradeProcessor.Service\Akka.CQRS.TradeProcessor.Service.csproj", "{5EB6F2C5-FEF1-402A-AB76-3A9F62B2EFDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.TradeProcessor.Service", "src\Akka.CQRS.TradeProcessor.Service\Akka.CQRS.TradeProcessor.Service.csproj", "{5EB6F2C5-FEF1-402A-AB76-3A9F62B2EFDE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.TradeProcessor.Actors", "src\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj", "{733BA8FC-C198-4C83-BA57-FE3672CBB307}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.TradeProcessor.Actors", "src\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj", "{733BA8FC-C198-4C83-BA57-FE3672CBB307}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Subscriptions", "src\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj", "{53895A69-5516-4598-8D76-32F9F2C67F0E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Subscriptions", "src\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj", "{53895A69-5516-4598-8D76-32F9F2C67F0E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Subscriptions.Tests", "src\Akka.CQRS.Subscriptions.Tests\Akka.CQRS.Subscriptions.Tests.csproj", "{E45B6452-4E63-4392-81FA-5C7B979A1A9B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -69,6 +71,10 @@ Global
 		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53895A69-5516-4598-8D76-32F9F2C67F0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E45B6452-4E63-4392-81FA-5C7B979A1A9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E45B6452-4E63-4392-81FA-5C7B979A1A9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E45B6452-4E63-4392-81FA-5C7B979A1A9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E45B6452-4E63-4392-81FA-5C7B979A1A9B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -82,6 +88,7 @@ Global
 		{5EB6F2C5-FEF1-402A-AB76-3A9F62B2EFDE} = {E1C0B656-C8EA-4F93-8855-798548B72B13}
 		{733BA8FC-C198-4C83-BA57-FE3672CBB307} = {E1C0B656-C8EA-4F93-8855-798548B72B13}
 		{53895A69-5516-4598-8D76-32F9F2C67F0E} = {08DA7279-F347-4F54-95B6-7335F52746A6}
+		{E45B6452-4E63-4392-81FA-5C7B979A1A9B} = {08DA7279-F347-4F54-95B6-7335F52746A6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B99E6BB8-642A-4A68-86DF-69567CBA700A}
