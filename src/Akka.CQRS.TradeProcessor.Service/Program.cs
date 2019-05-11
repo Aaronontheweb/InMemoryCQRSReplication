@@ -18,12 +18,15 @@ namespace Akka.CQRS.TradeProcessor.Service
     {
         static int Main(string[] args)
         {
-            Environment.SetEnvironmentVariable("MONGO_CONNECTION_STR", "fuber");
             var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STR")?.Trim();
             if (string.IsNullOrEmpty(mongoConnectionString))
             {
                 Console.WriteLine("ERROR! MongoDb connection string not provided. Can't start.");
                 return -1;
+            }
+            else
+            {
+                Console.WriteLine("Connecting to MongoDb at {0}", mongoConnectionString);
             }
 
             var config = File.ReadAllText("app.conf");
