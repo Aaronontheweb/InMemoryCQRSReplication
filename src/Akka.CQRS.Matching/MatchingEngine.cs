@@ -241,8 +241,8 @@ namespace Akka.CQRS.Matching
 
             // generate a fill for each order
             var time = timeService.Now;
-            var askFill = new Fill(ask.OrderId, actualSold, settlementPrice, bid.OrderId, time, partialAsk);
-            var bidFill = new Fill(bid.OrderId, actualSold, settlementPrice, ask.OrderId, time, partialBid);
+            var askFill = new Fill(ask.OrderId,  bid.StockId, actualSold, settlementPrice, bid.OrderId, time, partialAsk);
+            var bidFill = new Fill(bid.OrderId, bid.StockId, actualSold, settlementPrice, ask.OrderId, time, partialBid);
 
             return (bidFill, askFill);
         }

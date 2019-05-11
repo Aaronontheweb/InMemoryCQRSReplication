@@ -4,8 +4,13 @@ using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
 using Akka.Configuration;
+using Akka.CQRS.Infrastructure;
 using Akka.CQRS.TradeProcessor.Actors;
-using static Akka.CQRS.Util.MongoDbHoconHelper;
+using Petabridge.Cmd.Cluster;
+using Petabridge.Cmd.Cluster.Sharding;
+using Petabridge.Cmd.Host;
+using Petabridge.Cmd.Remote;
+using static Akka.CQRS.Infrastructure.MongoDbHoconHelper;
 
 namespace Akka.CQRS.TradeProcessor.Service
 {
@@ -23,12 +28,23 @@ namespace Akka.CQRS.TradeProcessor.Service
             }
 
             var conf = ConfigurationFactory.ParseString(File.ReadAllText("app.conf")).BootstrapFromDocker()
-                .WithFallback(GetMongoHocon(mongoConnectionString));
+                .WithFallback(GetMongoHocon(mongoConnectionString).WithFallback(Akka.Cluster.Sharding.ClusterSharding.DefaultConfig()));
 
             var actorSystem = ActorSystem.Create("AkkaTrader", conf);
             var sharding = ClusterSharding.Get(actorSystem);
 
-            sharding.Start("orderBook", s => OrderBookActor.)
+            var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
+                new StockShardMsgRouter());
+
+            // start Petabridge.Cmd (for external monitoring / supervision)
+            var pbm = PetabridgeCmd.Get(actorSystem);
+            pbm.RegisterCommandPalette(ClusterCommands.Instance);
+            pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
+            pbm.RegisterCommandPalette(RemoteCommands.Instance);
+            pbm.Start();
+
+            actorSystem.WhenTerminated.Wait();
+            return 0;
         }
     }
 }

@@ -20,6 +20,12 @@ namespace Akka.CQRS.TradeProcessor.Actors
     /// </summary>
     public class OrderBookActor : ReceivePersistentActor
     {
+        public static Props PropsFor(string tickerSymbol)
+        {
+            return PersistenceSupervisor.PropsFor((o, l) => new ConfirmableMessageEnvelope(l, tickerSymbol, l),
+                o => o is Bid || o is Ask, Props.Create(() => new OrderBookActor(tickerSymbol)), "orders");
+        }
+
         /// <summary>
         /// Take a snapshot every N messages persisted.
         /// </summary>
@@ -31,6 +37,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
+        public OrderBookActor(string tickerSymbol) : this(tickerSymbol, null, DistributedPubSubTradeEventPublisher.For(Context.System), NoOpTradeEventSubscriptionManager.Instance, Context.Parent) { }
         public OrderBookActor(string tickerSymbol, IActorRef confirmationActor) : this(tickerSymbol, null, DistributedPubSubTradeEventPublisher.For(Context.System), NoOpTradeEventSubscriptionManager.Instance, confirmationActor) { }
         public OrderBookActor(string tickerSymbol, MatchingEngine matchingEngine, ITradeEventPublisher publisher, ITradeEventSubscriptionManager subscriptionManager, IActorRef confirmationActor)
         {

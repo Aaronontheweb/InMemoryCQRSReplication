@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Akka.Configuration;
 
-namespace Akka.CQRS.Util
+namespace Akka.CQRS.Infrastructure
 {
     /// <summary>
     /// Shared utility class for formatting MongoDb connection strings into the required
