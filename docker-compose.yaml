@@ -18,6 +18,8 @@ services:
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: example
+    depends_on:
+      - "mongo"
 
   tradeprocessor_seed:
     image: akka.cqrs.tradeprocessor

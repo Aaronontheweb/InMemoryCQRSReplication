@@ -18,6 +18,7 @@ namespace Akka.CQRS.TradeProcessor.Service
     {
         static int Main(string[] args)
         {
+            Environment.SetEnvironmentVariable("MONGO_CONNECTION_STR", "fuber");
             var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STR")?.Trim();
             if (string.IsNullOrEmpty(mongoConnectionString))
             {
@@ -25,18 +26,19 @@ namespace Akka.CQRS.TradeProcessor.Service
                 return -1;
             }
 
-            var conf = GetMongoHocon(mongoConnectionString).WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("app.conf")).BootstrapFromDocker()
-                    .WithFallback(Akka.Cluster.Sharding.ClusterSharding.DefaultConfig()));
+            var config = File.ReadAllText("app.conf");
+            var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
+                .WithFallback(Akka.Cluster.Sharding.ClusterSharding.DefaultConfig()).BootstrapFromDocker();
 
-            var actorSystem = ActorSystem.Create("AkkaTrader", conf);
+            var actorSystem = ActorSystem.Create("AkkaTrader", config);
 
-            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
-            {
-                var sharding = ClusterSharding.Get(actorSystem);
+            //Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            //{
+            //    var sharding = ClusterSharding.Get(actorSystem);
 
-                var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
-                    new StockShardMsgRouter());
-            });
+            //    var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
+            //        new StockShardMsgRouter());
+            //});
 
             // start Petabridge.Cmd (for external monitoring / supervision)
             var pbm = PetabridgeCmd.Get(actorSystem);
