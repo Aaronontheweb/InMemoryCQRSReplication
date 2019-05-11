@@ -11,8 +11,9 @@ namespace Akka.CQRS.Infrastructure
     {
         public static Config GetMongoHocon(string connectionStr)
         {
-            return ConfigurationFactory.ParseString($"akka.persistence.journal.mongodb.connection-string = \"{connectionStr}\"" + Environment.NewLine
-                + $"akka.persistence.journal.mongodb.connection-string = \"{connectionStr}\"");
+            var mongoHocon = @"akka.persistence.journal.mongodb.connection-string = """ + connectionStr + @"""
+                                akka.persistence.journal.mongodb.connection-string = """ + connectionStr + @"""";
+            return mongoHocon;
         }
     }
 }
