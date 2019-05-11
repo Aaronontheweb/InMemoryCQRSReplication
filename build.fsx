@@ -233,6 +233,21 @@ Target "PublishNuget" (fun _ ->
 //--------------------------------------------------------------------------------
 // Docker images
 //--------------------------------------------------------------------------------  
+Target "PublishCode" (fun _ ->    
+    let projects = !! "src/**/*.Service.csproj" // publish services only
+
+    let runSingleProject project =
+        DotNetCli.Publish
+            (fun p -> 
+                { p with
+                    Project = project
+                    Configuration = configuration
+                    VersionSuffix = overrideVersionSuffix project
+                    })
+
+    projects |> Seq.iter (runSingleProject)
+)
+
 let mapDockerImageName (projectName:string) =
     match projectName with
     | "Akka.CQRS.TradeProcessor.Service" -> Some("akka.cqrs.tradeprocessor")
