@@ -231,6 +231,63 @@ Target "PublishNuget" (fun _ ->
 )
 
 //--------------------------------------------------------------------------------
+// Docker images
+//--------------------------------------------------------------------------------  
+let mapDockerImageName (projectName:string) =
+    match projectName with
+    | "Akka.CQRS.TradeProcessor.Service" -> Some("akka.cqrs.tradeprocessor")
+    | _ -> None
+
+Target "BuildDockerImages" (fun _ ->
+    let projects = !! "src/**/*.csproj" 
+                   -- "src/**/*Tests.csproj" // Don't publish unit tests
+                   -- "src/**/*Tests*.csproj"
+
+    let remoteRegistryUrl = getBuildParamOrDefault "remoteRegistry" ""
+
+    let buildDockerImage imageName projectPath =
+        
+        let args = 
+            if(hasBuildParam "remoteRegistry") then
+                StringBuilder()
+                    |> append "build"
+                    |> append "-t"
+                    |> append (imageName + ":" + releaseNotes.AssemblyVersion) 
+                    |> append "-t"
+                    |> append (imageName + ":latest") 
+                    |> append "-t"
+                    |> append (remoteRegistryUrl + "/" + imageName + ":" + releaseNotes.AssemblyVersion) 
+                    |> append "-t"
+                    |> append (remoteRegistryUrl + "/" + imageName + ":latest") 
+                    |> append "."
+                    |> toText
+            else
+                StringBuilder()
+                    |> append "build"
+                    |> append "-t"
+                    |> append (imageName + ":" + releaseNotes.AssemblyVersion) 
+                    |> append "-t"
+                    |> append (imageName + ":latest") 
+                    |> append "."
+                    |> toText
+
+        ExecProcess(fun info -> 
+                info.FileName <- "docker"
+                info.WorkingDirectory <- Path.GetDirectoryName projectPath
+                info.Arguments <- args) (System.TimeSpan.FromMinutes 5.0) (* Reasonably long-running task. *)
+
+    let runSingleProject project =
+        let projectName = Path.GetFileNameWithoutExtension project
+        let imageName = mapDockerImageName projectName
+        let result = match imageName with
+                        | None -> 0
+                        | Some(name) -> buildDockerImage name project
+        if result <> 0 then failwithf "docker build failed. %s" project
+
+    projects |> Seq.iter (runSingleProject)
+)
+
+//--------------------------------------------------------------------------------
 // Documentation 
 //--------------------------------------------------------------------------------  
 Target "DocFx" (fun _ ->
@@ -286,6 +343,7 @@ Target "Help" <| fun _ ->
 
 Target "BuildRelease" DoNothing
 Target "All" DoNothing
+Target "Docker" DoNothing
 Target "Nuget" DoNothing
 
 // build dependencies
@@ -300,6 +358,9 @@ Target "Nuget" DoNothing
 
 // docs
 "Clean" ==> "BuildRelease" ==> "Docfx"
+
+// Docker
+"BuildRelease" ==> "PublishCode" ==> "BuildDockerImages" ==> "Docker"
 
 // all
 "BuildRelease" ==> "All"

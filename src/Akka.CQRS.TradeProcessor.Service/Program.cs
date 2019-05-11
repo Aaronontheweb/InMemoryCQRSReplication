@@ -16,8 +16,6 @@ namespace Akka.CQRS.TradeProcessor.Service
 {
     class Program
     {
-
-
         static int Main(string[] args)
         {
             var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STR")?.Trim();
