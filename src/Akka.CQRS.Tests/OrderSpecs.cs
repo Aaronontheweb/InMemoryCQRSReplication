@@ -13,7 +13,7 @@ namespace Akka.CQRS.Tests
             var ask = new Ask("MSFT", "foo", 10.0m, 2.0d, DateTimeOffset.UtcNow);
             var trade = ask.ToOrder();
 
-            var fill = new Fill(ask.OrderId, ask.AskQuantity, ask.AskPrice, "bar", DateTimeOffset.UtcNow);
+            var fill = new Fill(ask.OrderId, ask.StockId, ask.AskQuantity, ask.AskPrice, "bar", DateTimeOffset.UtcNow);
 
             var filledTrade = trade.WithFill(fill);
             filledTrade.Completed.Should().BeTrue();
@@ -27,7 +27,7 @@ namespace Akka.CQRS.Tests
             var trade = ask.ToOrder();
 
             // partial fill
-            var fill = new Fill(ask.OrderId, ask.AskQuantity - 1.0d, ask.AskPrice, "bar", DateTimeOffset.UtcNow);
+            var fill = new Fill(ask.OrderId, ask.StockId, ask.AskQuantity - 1.0d, ask.AskPrice, "bar", DateTimeOffset.UtcNow);
 
             var filledTrade = trade.WithFill(fill);
             filledTrade.Completed.Should().BeFalse();
@@ -40,7 +40,7 @@ namespace Akka.CQRS.Tests
             var bid = new Bid("MSFT", "foo", 10.0m, 2.0d, DateTimeOffset.UtcNow);
             var trade = bid.ToOrder();
 
-            var fill = new Fill(bid.OrderId, bid.BidQuantity, bid.BidPrice, "bar", DateTimeOffset.UtcNow);
+            var fill = new Fill(bid.OrderId, bid.StockId, bid.BidQuantity, bid.BidPrice, "bar", DateTimeOffset.UtcNow);
 
             var filledTrade = trade.WithFill(fill);
             filledTrade.Completed.Should().BeTrue();
@@ -53,7 +53,7 @@ namespace Akka.CQRS.Tests
             var bid = new Bid("MSFT", "foo", 10.0m, 2.0d, DateTimeOffset.UtcNow);
             var trade = bid.ToOrder();
 
-            var fill = new Fill(bid.OrderId, bid.BidQuantity - 1.0d, bid.BidPrice, "bar", DateTimeOffset.UtcNow);
+            var fill = new Fill(bid.OrderId, bid.StockId, bid.BidQuantity - 1.0d, bid.BidPrice, "bar", DateTimeOffset.UtcNow);
 
             var filledTrade = trade.WithFill(fill);
             filledTrade.Completed.Should().BeFalse();

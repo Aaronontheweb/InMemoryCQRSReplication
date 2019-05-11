@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Description>Shared, non-domain-specific infrastructure used by various Akka.NET services.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.Cluster.Sharding" Version="$(AkkaVersion)-beta*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
+  </ItemGroup>
+</Project>

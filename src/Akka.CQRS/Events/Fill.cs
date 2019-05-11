@@ -7,9 +7,9 @@ namespace Akka.CQRS.Events
     /// <summary>
     /// Fill an open order
     /// </summary>
-    public sealed class Fill : IWithOrderId
+    public sealed class Fill : IWithOrderId, IWithStockId
     {
-        public Fill(string orderId, double quantity, decimal price, 
+        public Fill(string orderId, string stockId, double quantity, decimal price, 
             string filledById, DateTimeOffset timestamp, bool partialFill = false)
         {
             OrderId = orderId;
@@ -17,6 +17,7 @@ namespace Akka.CQRS.Events
             Price = price;
             FilledById = filledById;
             Timestamp = timestamp;
+            StockId = stockId;
             Partial = partialFill;
         }
 
@@ -34,5 +35,7 @@ namespace Akka.CQRS.Events
         /// When <c>true</c>, indicates that the order was only partially filled.
         /// </summary>
         public bool Partial { get; }
+
+        public string StockId { get; }
     }
 }
