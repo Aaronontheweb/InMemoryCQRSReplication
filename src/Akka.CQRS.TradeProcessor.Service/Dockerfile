@@ -5,6 +5,7 @@ WORKDIR /app
 ENV CLUSTER_SEEDS "[]"
 ENV CLUSTER_IP ""
 ENV CLUSTER_PORT "5055"
+ENV MONGO_CONNECTION_STR "" #MongoDb connection string for Akka.Persistence
 
 COPY ./bin/Release/netcoreapp2.1/publish/ /app
 

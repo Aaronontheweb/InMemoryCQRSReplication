@@ -25,14 +25,18 @@ namespace Akka.CQRS.TradeProcessor.Service
                 return -1;
             }
 
-            var conf = ConfigurationFactory.ParseString(File.ReadAllText("app.conf")).BootstrapFromDocker()
-                .WithFallback(GetMongoHocon(mongoConnectionString).WithFallback(Akka.Cluster.Sharding.ClusterSharding.DefaultConfig()));
+            var conf = GetMongoHocon(mongoConnectionString).WithFallback(ConfigurationFactory.ParseString(File.ReadAllText("app.conf")).BootstrapFromDocker()
+                    .WithFallback(Akka.Cluster.Sharding.ClusterSharding.DefaultConfig()));
 
             var actorSystem = ActorSystem.Create("AkkaTrader", conf);
-            var sharding = ClusterSharding.Get(actorSystem);
 
-            var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
-                new StockShardMsgRouter());
+            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            {
+                var sharding = ClusterSharding.Get(actorSystem);
+
+                var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
+                    new StockShardMsgRouter());
+            });
 
             // start Petabridge.Cmd (for external monitoring / supervision)
             var pbm = PetabridgeCmd.Get(actorSystem);
