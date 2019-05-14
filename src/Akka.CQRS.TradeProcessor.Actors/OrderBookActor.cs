@@ -42,6 +42,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
         public OrderBookActor(string tickerSymbol, MatchingEngine matchingEngine, ITradeEventPublisher publisher, ITradeEventSubscriptionManager subscriptionManager, IActorRef confirmationActor)
         {
             TickerSymbol = tickerSymbol;
+            PersistenceId = $"{TickerSymbol}-orderBook";
             _matchingEngine = matchingEngine ?? CreateDefaultMatchingEngine(tickerSymbol, _log);
             _publisher = publisher;
             _confirmationActor = confirmationActor;
@@ -57,7 +58,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
         }
 
         public string TickerSymbol { get; }
-        public override string PersistenceId => TickerSymbol;
+        public override string PersistenceId { get; }
 
         private void Recovers()
         {
