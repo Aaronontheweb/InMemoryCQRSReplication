@@ -4,6 +4,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
+using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.TradeProcessor.Actors;
@@ -20,7 +21,7 @@ namespace Akka.CQRS.TradePlacers.Service
         static int Main(string[] args)
         {
             var config = File.ReadAllText("app.conf");
-            var conf = ConfigurationFactory.ParseString(config).WithFallback(ClusterSharding.DefaultConfig());
+            var conf = ConfigurationFactory.ParseString(config).WithFallback(ClusterSharding.DefaultConfig()).WithFallback(DistributedPubSub.DefaultConfig());
 
             var actorSystem = ActorSystem.Create("AkkaTrader", conf.BootstrapFromDocker());
 
@@ -28,7 +29,7 @@ namespace Akka.CQRS.TradePlacers.Service
             {
                 var sharding = ClusterSharding.Get(actorSystem);
 
-                var shardRegionProxy = sharding.StartProxy("orderBook", null, new StockShardMsgRouter());
+                var shardRegionProxy = sharding.StartProxy("orderBook", "trade-processor", new StockShardMsgRouter());
                 foreach (var stock in AvailableTickerSymbols.Symbols)
                 {
                     var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);

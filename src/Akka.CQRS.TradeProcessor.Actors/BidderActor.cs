@@ -8,6 +8,7 @@ using Akka.CQRS.Subscriptions;
 using Akka.CQRS.Subscriptions.DistributedPubSub;
 using Akka.CQRS.Util;
 using Akka.Event;
+using Akka.Persistence.Extras;
 using Akka.Util;
 
 namespace Akka.CQRS.TradeProcessor.Actors
@@ -18,6 +19,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
     public sealed class BidderActor : ReceiveActor
     {
         private readonly string _tickerSymbol;
+        private readonly string _traderId;
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly ITradeEventSubscriptionManager _subscriptionManager;
         private readonly ITradeOrderIdGenerator _tradeOrderIdGenerator;
@@ -28,6 +30,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
         private readonly PriceRange _targetRange;
         private readonly Dictionary<string, Bid> _bids = new Dictionary<string, Bid>();
         private readonly List<Fill> _fills = new List<Fill>();
+        private long _confirmationId = 0;
         private ICancelable _bidInterval;
 
         private class DoSubscribe
@@ -57,6 +60,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
             _targetRange = targetRange;
             _tradeOrderIdGenerator = tradeOrderIdGenerator;
             _timestampGenerator = timestampGenerator;
+            _traderId = $"{_tickerSymbol}-{_tradeOrderIdGenerator.NextId()}";
             Self.Tell(DoSubscribe.Instance);
             Subscribing();
         }
@@ -87,7 +91,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
             {
                 var bid = CreateBid();
                 _bids[bid.OrderId] = bid;
-                _tradeGateway.Tell(bid);
+                _tradeGateway.Tell(new ConfirmableMessage<Bid>(bid, _confirmationId++, _traderId));
                 _log.Info("BID ${0} for {1} units of {2}", bid.BidPrice, bid.BidQuantity, _tickerSymbol);
             });
 
