@@ -12,7 +12,7 @@ namespace Akka.CQRS.Pricing.Events
     /// <summary>
     /// Concrete <see cref="IPriceUpdate"/> implementation.
     /// </summary>
-    public sealed class PriceChanged : IPriceUpdate, IComparable<PriceChanged>, IComparable
+    public sealed class PriceChanged : IPriceUpdate, IComparable<PriceChanged>
     {
         public PriceChanged(string stockId, decimal currentAvgPrice, DateTimeOffset timestamp)
         {
@@ -34,36 +34,13 @@ namespace Akka.CQRS.Pricing.Events
             return Timestamp.CompareTo(other.Timestamp);
         }
 
-        public int CompareTo(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return 1;
-            if (ReferenceEquals(this, obj)) return 0;
-            return obj is PriceChanged other ? CompareTo(other) : throw new ArgumentException($"Object must be of type {nameof(PriceChanged)}");
-        }
-
         public int CompareTo(IPriceUpdate other)
         {
-            throw new NotImplementedException();
-        }
-
-        public static bool operator <(PriceChanged left, PriceChanged right)
-        {
-            return Comparer<PriceChanged>.Default.Compare(left, right) < 0;
-        }
-
-        public static bool operator >(PriceChanged left, PriceChanged right)
-        {
-            return Comparer<PriceChanged>.Default.Compare(left, right) > 0;
-        }
-
-        public static bool operator <=(PriceChanged left, PriceChanged right)
-        {
-            return Comparer<PriceChanged>.Default.Compare(left, right) <= 0;
-        }
-
-        public static bool operator >=(PriceChanged left, PriceChanged right)
-        {
-            return Comparer<PriceChanged>.Default.Compare(left, right) >= 0;
+            if (other is PriceChanged c)
+            {
+                return CompareTo(c);
+            }
+            throw new ArgumentException();
         }
     }
 }
