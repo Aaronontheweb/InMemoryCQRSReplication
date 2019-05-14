@@ -91,7 +91,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
                     _log.Info("[{0}][{1}] - {2} units @ {3} per unit", PersistenceId, @event.ToTradeEventType(), a.Message.AskQuantity, a.Message.AskPrice);
                     if (@event is Ask)
                     {
-                        // need to use the ID of the original sender to satisfy the PeristenceSupervisor
+                        // need to use the ID of the original sender to satisfy the PersistenceSupervisor
                         _confirmationActor.Tell(new Confirmation(a.ConfirmationId, a.SenderId));
                     }
                     _publisher.Publish(PersistenceId, @event);
