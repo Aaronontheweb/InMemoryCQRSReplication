@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Akka.Actor;
 using Akka.CQRS.Events;
@@ -17,6 +18,8 @@ namespace Akka.CQRS.TradeProcessor.Actors
         private readonly string _tickerSymbol;
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly ITradeEventSubscriptionManager _subscriptionManager;
+        private readonly ITradeOrderIdGenerator _tradeOrderIdGenerator;
+        private readonly ITimestamper _timestampGenerator;
 
         // tradeGateway is usefully going to be a Cluster.Sharding.RegionProxy
         private readonly IActorRef _tradeGateway;
@@ -37,12 +40,16 @@ namespace Akka.CQRS.TradeProcessor.Actors
             private DoBid() { }
         }
 
-        public BidderActor(string tickerSymbol, ITradeEventSubscriptionManager subscriptionManager, IActorRef tradeGateway, PriceRange targetRange)
+        public BidderActor(string tickerSymbol, ITradeEventSubscriptionManager subscriptionManager, 
+            IActorRef tradeGateway, PriceRange targetRange, ITradeOrderIdGenerator tradeOrderIdGenerator, 
+            ITimestamper timestampGenerator)
         {
             _tickerSymbol = tickerSymbol;
             _subscriptionManager = subscriptionManager;
             _tradeGateway = tradeGateway;
             _targetRange = targetRange;
+            _tradeOrderIdGenerator = tradeOrderIdGenerator;
+            _timestampGenerator = timestampGenerator;
             Self.Tell(DoSubscribe.Instance);
             Subscribing();
         }
@@ -71,10 +78,27 @@ namespace Akka.CQRS.TradeProcessor.Actors
             // Time to place a new bid
             Receive<DoBid>(_ =>
             {
-                var price = ThreadLocalRandom.Current.WithinRange(_targetRange);
-                var quantity = ThreadLocalRandom.Current.Next(1, 20);
-                
+                var bid = CreateBid();
+                _bids[bid.OrderId] = bid;
+                _tradeGateway.Tell(bid);
+                _log.Info("BID ${0} for {1} units of {2}", bid.BidPrice, bid.BidQuantity, _tickerSymbol);
             });
+
+            Receive<Fill>(f => _bids.ContainsKey(f.OrderId), f =>
+            {
+                _fills.Add(f);
+                _log.Info("Received FILL for order {0} of {1} stock @ ${2} per unit for {3} units", f.OrderId, f.StockId, f.Price, f.Quantity);
+                _log.Info("We now own {0} units of {1} at AVG price of {2}", _fills.Sum(x => x.Quantity), _tickerSymbol, _fills.Average(x => (decimal)x.Quantity * x.Price));
+            });
+        }
+
+        private Bid CreateBid()
+        {
+            var price = ThreadLocalRandom.Current.WithinRange(_targetRange);
+            var quantity = ThreadLocalRandom.Current.Next(1, 20);
+            var orderId = _tradeOrderIdGenerator.NextId();
+            var bid = new Bid(_tickerSymbol, orderId, price, quantity, _timestampGenerator.Now);
+            return bid;
         }
 
         protected override void PostStop()
