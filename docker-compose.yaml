@@ -16,16 +16,27 @@ services:
     depends_on:
       - "mongo"
 
-  tradeprocessor_seed:
+  lighthouse:
+    image: petabridge/lighthouse:latest
+    hostname: lighthouse
+    ports:
+      - '9110:9110'
+      - '4053:4053'
+    environment:
+      ACTORSYSTEM: "AkkaTrader"
+      CLUSTER_PORT: 4053
+      CLUSTER_IP: "lighthouse"
+      CLUSTER_SEEDS: "akka.tcp://AkkaTrader@lighthouse:4053"
+
+  tradeprocessor:
     image: akka.cqrs.tradeprocessor
-    hostname: tradeprocessor_seed
     ports:
       - '0:9110'
     environment:
-      CLUSTER_SEEDS: "akka.tcp://AkkaTrader@tradeprocessor_seed:5110"
-      CLUSTER_IP: "tradeprocessor_seed"
+      CLUSTER_SEEDS: "akka.tcp://AkkaTrader@lighthouse:4053"
       CLUSTER_PORT: 5110
       MONGO_CONNECTION_STR: "mongodb://mongo:27017/akkaTrader"
     restart: on-failure
     depends_on:
       - "mongo"
+      - "lighthouse"
