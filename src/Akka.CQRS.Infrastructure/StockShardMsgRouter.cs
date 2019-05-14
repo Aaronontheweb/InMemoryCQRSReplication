@@ -1,5 +1,7 @@
 ﻿using System;
 using Akka.Cluster.Sharding;
+using Akka.CQRS.Events;
+using Akka.Persistence.Extras;
 
 namespace Akka.CQRS.Infrastructure
 {
@@ -26,6 +28,18 @@ namespace Akka.CQRS.Infrastructure
             if (message is IWithStockId stockMsg)
             {
                 return stockMsg.StockId;
+            }
+
+            switch (message)
+            {
+                case ConfirmableMessage<Ask> a:
+                    return a.Message.StockId;
+                case ConfirmableMessage<Bid> b:
+                    return b.Message.StockId;
+                case ConfirmableMessage<Fill> f:
+                    return f.Message.StockId;
+                case ConfirmableMessage<Match> m:
+                    return m.Message.StockId;
             }
 
             return null;
