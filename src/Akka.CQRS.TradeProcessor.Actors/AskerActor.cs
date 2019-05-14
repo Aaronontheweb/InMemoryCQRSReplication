@@ -5,6 +5,8 @@ using System.Text;
 using Akka.Actor;
 using Akka.CQRS.Events;
 using Akka.CQRS.Subscriptions;
+using Akka.CQRS.Subscriptions.DistributedPubSub;
+using Akka.CQRS.Util;
 using Akka.Event;
 using Akka.Util;
 
@@ -39,6 +41,11 @@ namespace Akka.CQRS.TradeProcessor.Actors
             public static readonly DoAsk Instance = new DoAsk();
             private DoAsk() { }
         }
+
+        public AskerActor(string tickerSymbol, PriceRange targetRange, IActorRef tradeGateway)
+            : this(tickerSymbol, DistributedPubSubTradeEventSubscriptionManager.For(Context.System), tradeGateway, targetRange,
+                GuidTradeOrderIdGenerator.Instance, CurrentUtcTimestamper.Instance)
+        { }
 
         public AskerActor(string tickerSymbol, ITradeEventSubscriptionManager subscriptionManager,
             IActorRef tradeGateway, PriceRange targetRange, ITradeOrderIdGenerator tradeOrderIdGenerator,
