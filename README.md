@@ -1,6 +1,6 @@
 # Akka.CQRS
 
-Update this readme file with your details.
+WORK IN PROGRESS - subscribe for updates. 
 
 ## Building this solution
 To run the build script associated with this solution, execute the following:
