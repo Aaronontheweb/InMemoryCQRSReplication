@@ -7,7 +7,7 @@ namespace Akka.CQRS.Pricing.Events
     /// <summary>
     /// Used to signal a change in price for a specific stock.
     /// </summary>
-    public interface IPriceUpdate : IWithStockId
+    public interface IPriceUpdate : IWithStockId, IComparable<IPriceUpdate>
     {
         /// <summary>
         /// The time of this price update.
@@ -18,17 +18,5 @@ namespace Akka.CQRS.Pricing.Events
         /// The current volume-weighted average price.
         /// </summary>
         decimal CurrentAvgPrice { get; }
-    }
-
-    /// <summary>
-    /// Concrete 
-    /// </summary>
-    public sealed class PriceChanged : IPriceUpdate
-    {
-        public DateTimeOffset Timestamp { get; }
-
-        public decimal CurrentAvgPrice { get; }
-
-        public string StockId { get; }
     }
 }
