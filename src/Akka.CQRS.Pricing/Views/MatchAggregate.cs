@@ -37,7 +37,7 @@ namespace Akka.CQRS.Pricing.Views
         /// </summary>
         /// <param name="timestampService">Optional - the service used for time-stamping the price and volume updates.</param>
         /// <returns>The current price and volume update events.</returns>
-        (IPriceUpdate lastestPrice, IVolumeUpdate latestVolume) FetchMetrics(ITimestamper timestampService = null)
+        public (IPriceUpdate lastestPrice, IVolumeUpdate latestVolume) FetchMetrics(ITimestamper timestampService = null)
         {
             var currentTime = timestampService?.Now ?? CurrentUtcTimestamper.Instance.Now;
             return (new PriceChanged(TickerSymbol, AvgPrice.CurrentAvg, currentTime),

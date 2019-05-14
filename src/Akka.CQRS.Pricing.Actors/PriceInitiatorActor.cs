@@ -33,14 +33,6 @@ namespace Akka.CQRS.Pricing.Actors
          */
         private ICancelable _heartbeatInterval;
 
-        /// <summary>
-        /// Send this to ourselves in the event that our task completes, which it shouldn't.
-        /// </summary>
-        private class UnexpectedEndOfStream
-        {
-            public static readonly UnexpectedEndOfStream Instance = new UnexpectedEndOfStream();
-            private UnexpectedEndOfStream() { }
-        }
 
         private class Heartbeat
         {
@@ -86,6 +78,11 @@ namespace Akka.CQRS.Pricing.Actors
 
             _heartbeatInterval = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(30),
                 TimeSpan.FromSeconds(30), Self, Heartbeat.Instance, ActorRefs.NoSender);
+        }
+
+        protected override void PostStop()
+        {
+            _heartbeatInterval?.Cancel();
         }
     }
 }
