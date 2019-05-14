@@ -10,14 +10,14 @@ namespace Akka.CQRS.Events
     /// </summary>
     public sealed class Bid : IWithStockId, IWithOrderId
     {
-        public Bid(string stockId, string tradeId, decimal bidPrice, 
+        public Bid(string stockId, string orderId, decimal bidPrice, 
             double bidQuantity, DateTimeOffset timeIssued)
         {
             StockId = stockId;
             BidPrice = bidPrice;
             BidQuantity = bidQuantity;
             TimeIssued = timeIssued;
-            OrderId = tradeId;
+            OrderId = orderId;
         }
 
         public string StockId { get; }

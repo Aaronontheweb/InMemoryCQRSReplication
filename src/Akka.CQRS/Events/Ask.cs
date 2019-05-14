@@ -8,14 +8,14 @@ namespace Akka.CQRS.Events
     /// </summary>
     public sealed class Ask : IWithStockId, IWithOrderId
     {
-        public Ask(string stockId, string tradeId, decimal askPrice, 
+        public Ask(string stockId, string orderId, decimal askPrice, 
             double askQuantity, DateTimeOffset timeIssued)
         {
             StockId = stockId;
             AskPrice = askPrice;
             AskQuantity = askQuantity;
             TimeIssued = timeIssued;
-            OrderId = tradeId;
+            OrderId = orderId;
         }
 
         public string StockId { get; }

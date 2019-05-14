@@ -3,6 +3,7 @@ using System.IO;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
+using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.TradeProcessor.Actors;
@@ -31,7 +32,8 @@ namespace Akka.CQRS.TradeProcessor.Service
 
             var config = File.ReadAllText("app.conf");
             var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
-                .WithFallback(ClusterSharding.DefaultConfig());
+                .WithFallback(ClusterSharding.DefaultConfig())
+                .WithFallback(DistributedPubSub.DefaultConfig());
 
             var actorSystem = ActorSystem.Create("AkkaTrader", conf.BootstrapFromDocker());
 
