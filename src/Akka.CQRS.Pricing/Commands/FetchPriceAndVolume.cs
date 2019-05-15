@@ -16,9 +16,4 @@ namespace Akka.CQRS.Pricing.Commands
 
         public string StockId { get; }
     }
-
-    public sealed class GetCurrentPrice : IWithStockId
-    {
-        public string StockId { get; }
-    }
 }

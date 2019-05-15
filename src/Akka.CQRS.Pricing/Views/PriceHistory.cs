@@ -24,6 +24,8 @@ namespace Akka.CQRS.Pricing.Views
 
         public DateTimeOffset Until => HistoricalPrices.Last().Timestamp;
 
+        public decimal CurrentPrice => HistoricalPrices.Last().CurrentAvgPrice;
+
         public TimeSpan Range => Until - From;
 
         public ImmutableSortedSet<IPriceUpdate> HistoricalPrices { get; }
