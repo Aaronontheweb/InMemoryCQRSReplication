@@ -42,6 +42,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
         public OrderBookActor(string tickerSymbol, MatchingEngine matchingEngine, ITradeEventPublisher publisher, ITradeEventSubscriptionManager subscriptionManager, IActorRef confirmationActor)
         {
             TickerSymbol = tickerSymbol;
+            PersistenceId = $"{TickerSymbol}-orderBook";
             _matchingEngine = matchingEngine ?? CreateDefaultMatchingEngine(tickerSymbol, _log);
             _publisher = publisher;
             _confirmationActor = confirmationActor;
@@ -57,7 +58,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
         }
 
         public string TickerSymbol { get; }
-        public override string PersistenceId => TickerSymbol;
+        public override string PersistenceId { get; }
 
         private void Recovers()
         {
@@ -91,7 +92,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
                     _log.Info("[{0}][{1}] - {2} units @ {3} per unit", PersistenceId, @event.ToTradeEventType(), a.Message.AskQuantity, a.Message.AskPrice);
                     if (@event is Ask)
                     {
-                        // need to use the ID of the original sender to satisfy the PeristenceSupervisor
+                        // need to use the ID of the original sender to satisfy the PersistenceSupervisor
                         _confirmationActor.Tell(new Confirmation(a.ConfirmationId, a.SenderId));
                     }
                     _publisher.Publish(PersistenceId, @event);
