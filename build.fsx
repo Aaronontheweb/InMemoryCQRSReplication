@@ -252,6 +252,7 @@ let mapDockerImageName (projectName:string) =
     match projectName with
     | "Akka.CQRS.TradeProcessor.Service" -> Some("akka.cqrs.tradeprocessor")
     | "Akka.CQRS.TradePlacers.Service" -> Some("akka.cqrs.traders")
+    | "Akka.CQRS.Pricing.Service" -> Some("akka.cqrs.pricing")
     | _ -> None
 
 Target "BuildDockerImages" (fun _ ->

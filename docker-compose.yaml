@@ -51,3 +51,26 @@ services:
     restart: on-failure
     depends_on:
       - "lighthouse"
+
+  lighthouse_pricing:
+    image: petabridge/lighthouse:latest
+    hostname: lighthouse_pricing
+    ports:
+      - '9111:9110'
+      - '4054:4054'
+    environment:
+      ACTORSYSTEM: "AkkaPricing"
+      CLUSTER_PORT: 4053
+      CLUSTER_IP: "lighthouse_pricing"
+      CLUSTER_SEEDS: "akka.tcp://AkkaPricing@lighthouse_pricing:4054"
+
+  pricing-engine:
+    image: akka.cqrs.pricing
+    environment:
+      CLUSTER_SEEDS: "akka.tcp://AkkaPricing@lighthouse_pricing:4054"
+      CLUSTER_PORT: 6055
+      MONGO_CONNECTION_STR: "mongodb://mongo:27017/akkaTrader"
+    restart: on-failure
+    depends_on:
+      - "mongo"
+      - "lighthouse_pricing"
