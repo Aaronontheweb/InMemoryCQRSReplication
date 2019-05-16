@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.CQRS.Events;
@@ -28,8 +29,8 @@ namespace Akka.CQRS.Pricing.Actors
         private readonly IActorRef _mediator;
         private readonly ITimestamper _timestamper;
         private readonly ILoggingAdapter _log = Context.GetLogger();
-        private readonly CircularBuffer<IPriceUpdate> _priceUpdates = new CircularBuffer<IPriceUpdate>(MatchAggregate.DefaultSampleSize);
-        private readonly CircularBuffer<IVolumeUpdate> _volumeUpdates = new CircularBuffer<IVolumeUpdate>(MatchAggregate.DefaultSampleSize);
+        private CircularBuffer<IPriceUpdate> _priceUpdates = new CircularBuffer<IPriceUpdate>(MatchAggregate.DefaultSampleSize);
+        private CircularBuffer<IVolumeUpdate> _volumeUpdates = new CircularBuffer<IVolumeUpdate>(MatchAggregate.DefaultSampleSize);
         private ICancelable _publishPricesTask;
 
         private readonly string _priceTopic;
@@ -103,12 +104,14 @@ namespace Akka.CQRS.Pricing.Actors
         private void RecoverAggregateData(MatchAggregatorSnapshot s)
         {
             _matchAggregate = new MatchAggregate(TickerSymbol, s.AvgPrice, s.AvgVolume);
+            _priceUpdates.Enqueue(s.RecentPriceUpdates.ToArray());
+            _volumeUpdates.Enqueue(s.RecentVolumeUpdates.ToArray());
             QueryOffset = s.QueryOffset;
         }
 
         private MatchAggregatorSnapshot SaveAggregateData()
         {
-            return new MatchAggregatorSnapshot(QueryOffset, _matchAggregate.AvgPrice.CurrentAvg, _matchAggregate.AvgVolume.CurrentAvg);
+            return new MatchAggregatorSnapshot(QueryOffset, _matchAggregate.AvgPrice.CurrentAvg, _matchAggregate.AvgVolume.CurrentAvg, _priceUpdates.ToList(), _volumeUpdates.ToList());
         }
 
         private void Commands()
@@ -157,7 +160,12 @@ namespace Akka.CQRS.Pricing.Actors
                     return;
 
                 var (latestPrice, latestVolume) = _matchAggregate.FetchMetrics(_timestamper);
-                
+
+                // Need to update pricing records prior to persisting our state, since this data is included in
+                // output of SaveAggregateData()
+                _priceUpdates.Add(latestPrice);
+                _volumeUpdates.Add(latestVolume);
+
                 PersistAsync(SaveAggregateData(), snapshot =>
                 {
                     _log.Info("Saved latest price {0} and volume {1}", snapshot.AvgPrice, snapshot.AvgVolume);
@@ -166,9 +174,6 @@ namespace Akka.CQRS.Pricing.Actors
                         SaveSnapshot(snapshot);
                     }
                 });
-
-                _priceUpdates.Add(latestPrice);
-                _volumeUpdates.Add(latestVolume);
 
                 // publish updates to in-memory replicas
                 _mediator.Tell(new Publish(_priceTopic, latestPrice));

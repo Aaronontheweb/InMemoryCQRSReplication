@@ -156,7 +156,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
                 }
                 catch (Exception ex)
                 {
-                    _log.Error(ex, "Error while processing unsubscription {0}", unsub);
+                    _log.Error(ex, "Error while processing unsubscribe {0}", unsub);
                     unsub.Subscriber.Tell(new TradeUnsubscribeNack(TickerSymbol, unsub.Events, ex.Message));
                 }
             });
@@ -169,7 +169,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
                 }
                 catch (Exception ex)
                 {
-                    _log.Error(ex, "Error while processing unsubscription for terminated subscriber {0} for symbol {1}", t.ActorRef, TickerSymbol);
+                    _log.Error(ex, "Error while processing unsubscribe for terminated subscriber {0} for symbol {1}", t.ActorRef, TickerSymbol);
                 }
             });
 
