@@ -90,6 +90,8 @@ namespace Akka.CQRS.Pricing.Actors
                 Sender.Tell(h);
             });
 
+            
+
             Receive<PriceAndVolumeSnapshot>(_ => { }); // ignore
             Receive<Terminated>(t =>
             {
