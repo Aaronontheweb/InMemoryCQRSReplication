@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Akka.CQRS.Pricing.Events;
 
 namespace Akka.CQRS.Pricing
 {
@@ -9,11 +10,14 @@ namespace Akka.CQRS.Pricing
     /// </summary>
     public sealed class MatchAggregatorSnapshot
     {
-        public MatchAggregatorSnapshot(long queryOffset, decimal avgPrice, double avgVolume)
+        public MatchAggregatorSnapshot(long queryOffset, decimal avgPrice, double avgVolume, 
+            IReadOnlyList<IPriceUpdate> recentPriceUpdates, IReadOnlyList<IVolumeUpdate> recentVolumeUpdates)
         {
             QueryOffset = queryOffset;
             AvgPrice = avgPrice;
             AvgVolume = avgVolume;
+            RecentPriceUpdates = recentPriceUpdates;
+            RecentVolumeUpdates = recentVolumeUpdates;
         }
 
         /// <summary>
@@ -30,5 +34,9 @@ namespace Akka.CQRS.Pricing
         /// The most recently saved average volume.
         /// </summary>
         public double AvgVolume { get; }
+
+        public IReadOnlyList<IPriceUpdate> RecentPriceUpdates { get; }
+
+        public IReadOnlyList<IVolumeUpdate> RecentVolumeUpdates { get; }
     }
 }
