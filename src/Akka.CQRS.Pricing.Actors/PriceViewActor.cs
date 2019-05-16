@@ -46,8 +46,17 @@ namespace Akka.CQRS.Pricing.Actors
         {
             Receive<PriceAndVolumeSnapshot>(s =>
             {
-                _history = new PriceHistory(_tickerSymbol, s.PriceUpdates.ToImmutableSortedSet());
-                _log.Info("Received recent price history for [{0}] - current price is [{1}] as of [{2}]", _history.StockId, _history.CurrentPrice, _history.Until);
+                if (s.PriceUpdates.Length == 0) // empty set - no price data yet
+                {
+                    _history = new PriceHistory(_tickerSymbol, ImmutableSortedSet<IPriceUpdate>.Empty);
+                    _log.Info("Received empty price history for [{0}]", _history.StockId);
+                }
+                else
+                {
+                    _history = new PriceHistory(_tickerSymbol, s.PriceUpdates.ToImmutableSortedSet());
+                    _log.Info("Received recent price history for [{0}] - current price is [{1}] as of [{2}]", _history.StockId, _history.CurrentPrice, _history.Until);
+                }
+                
                 _tickerEntity = Sender;
                 _mediator.Tell(new Subscribe(_priceTopic, Self));
             });

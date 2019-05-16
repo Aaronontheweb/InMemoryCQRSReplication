@@ -25,5 +25,13 @@ namespace Akka.CQRS.Pricing.Commands
         public IPriceUpdate[] PriceUpdates { get; }
 
         public IVolumeUpdate[] VolumeUpdates { get; }
+
+        public static readonly IPriceUpdate[] EmptyPrices = new IPriceUpdate[0];
+        public static readonly IVolumeUpdate[] EmptyVolumes = new IVolumeUpdate[0];
+
+        public static PriceAndVolumeSnapshot Empty(string stockId)
+        {
+            return new PriceAndVolumeSnapshot(stockId, EmptyPrices, EmptyVolumes);
+        }
     }
 }

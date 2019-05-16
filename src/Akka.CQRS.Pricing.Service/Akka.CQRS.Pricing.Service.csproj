@@ -4,11 +4,13 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>$(NetCoreVersion)</TargetFramework>
   </PropertyGroup>
+
   <ItemGroup>
     <Content Include="app.conf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Akka.Bootstrap.Docker" Version="0.2.1" />
     <PackageReference Include="Akka.HealthCheck.Persistence" Version="0.2.1" />
@@ -17,10 +19,10 @@
     <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="0.6.0-beta" />
     <PackageReference Include="Petabridge.Cmd.Remote" Version="0.6.0" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS.Infrastructure\Akka.CQRS.Infrastructure.csproj" />
     <ProjectReference Include="..\Akka.CQRS.Pricing.Actors\Akka.CQRS.Pricing.Actors.csproj" />
-    <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj" />
   </ItemGroup>
 
 </Project>

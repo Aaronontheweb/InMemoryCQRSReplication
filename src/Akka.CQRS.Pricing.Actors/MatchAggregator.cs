@@ -123,6 +123,12 @@ namespace Akka.CQRS.Pricing.Actors
                         QueryOffset = s.Value;
                     }
 
+                    if (_matchAggregate == null)
+                    {
+                        _matchAggregate = new MatchAggregate(TickerSymbol, m.SettlementPrice, m.Quantity);
+                        return;
+                    }
+
                     if (!_matchAggregate.WithMatch(m))
                     {
                         _log.Warning("Received Match for ticker symbol [{0}] - but we only accept symbols for [{1}]", m.StockId, TickerSymbol);
@@ -130,8 +136,26 @@ namespace Akka.CQRS.Pricing.Actors
                 }
             });
 
+            // Command sent by a PriceViewActor to pull down a complete snapshot of active pricing data
+            Command<FetchPriceAndVolume>(f =>
+            {
+                // no price data yet
+                if (_priceUpdates.Count == 0 || _volumeUpdates.Count == 0)
+                {
+                    Sender.Tell(PriceAndVolumeSnapshot.Empty(TickerSymbol));
+                }
+                else
+                {
+                    Sender.Tell(new PriceAndVolumeSnapshot(TickerSymbol, _priceUpdates.ToArray(), _volumeUpdates.ToArray()));
+                }
+                
+            });
+
             Command<PublishEvents>(p =>
             {
+                if (_matchAggregate == null)
+                    return;
+
                 var (latestPrice, latestVolume) = _matchAggregate.FetchMetrics(_timestamper);
                 
                 PersistAsync(SaveAggregateData(), snapshot =>
