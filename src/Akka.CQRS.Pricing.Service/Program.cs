@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
@@ -10,6 +11,7 @@ using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Pricing.Actors;
 using Akka.Persistence.MongoDb.Query;
 using Akka.Persistence.Query;
+using Akka.Util;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
@@ -40,16 +42,30 @@ namespace Akka.CQRS.Pricing.Service
 
             var actorSystem = ActorSystem.Create("AkkaPricing", conf.BootstrapFromDocker());
             var readJournal = actorSystem.ReadJournalFor<MongoDbReadJournal>(MongoDbReadJournal.Identifier);
-            var sharding = ClusterSharding.Get(actorSystem);
 
-            var shardRegion = sharding.Start("priceAggregator", s => Props.Create(() => new MatchAggregator(s, readJournal)), ClusterShardingSettings.Create(actorSystem),
-                new StockShardMsgRouter());
+            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            {
+                var sharding = ClusterSharding.Get(actorSystem);
 
-            // used to seed pricing data
-            var singleton = ClusterSingletonManager.Props(
-                Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
-                ClusterSingletonManagerSettings.Create(
-                    actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
+                var shardRegion = sharding.Start("priceAggregator",
+                    s => Props.Create(() => new MatchAggregator(s, readJournal)),
+                    ClusterShardingSettings.Create(actorSystem),
+                    new StockShardMsgRouter());
+
+                // used to seed pricing data
+                var singleton = ClusterSingletonManager.Props(
+                    Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
+                    ClusterSingletonManagerSettings.Create(
+                        actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
+
+                var mediator = DistributedPubSub.Get(actorSystem).Mediator;
+
+                foreach (var stock in AvailableTickerSymbols.Symbols)
+                {
+                    actorSystem.ActorOf(Props.Create(() => new PriceVolumeViewActor(stock, shardRegion, mediator)),
+                        stock + "-view");
+                }
+            });
 
             // start Petabridge.Cmd (for external monitoring / supervision)
             var pbm = PetabridgeCmd.Get(actorSystem);
