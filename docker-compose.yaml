@@ -60,7 +60,7 @@ services:
       - '4054:4054'
     environment:
       ACTORSYSTEM: "AkkaPricing"
-      CLUSTER_PORT: 4053
+      CLUSTER_PORT: 4054
       CLUSTER_IP: "lighthouse_pricing"
       CLUSTER_SEEDS: "akka.tcp://AkkaPricing@lighthouse_pricing:4054"
 
