@@ -38,6 +38,13 @@ namespace Akka.CQRS.Pricing.Cli
         {
             Receive<PriceHistory>(p =>
             {
+                if (p.HistoricalPrices.IsEmpty)
+                {
+                    _commandHandlerActor.Tell(new CommandResponse($"No historical price data for [{_tickerSymbol}] - waiting for updates.", false));
+                    BecomePriceUpdates();
+                    return;
+                }
+
                 _currentPrice = p.CurrentPriceUpdate;
                 foreach (var e in p.HistoricalPrices)
                 {

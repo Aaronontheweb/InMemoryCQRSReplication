@@ -87,7 +87,7 @@ namespace Akka.CQRS.Pricing.Actors
         {
             Receive<IPriceUpdate>(p =>
             {
-                _history.WithPrice(p);
+                _history = _history.WithPrice(p);
                 _log.Info("[{0}] - current price is [{1}] as of [{2}]", _history.StockId, p.CurrentAvgPrice, p.Timestamp);
 
             });
