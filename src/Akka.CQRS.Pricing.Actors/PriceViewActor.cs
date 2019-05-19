@@ -17,6 +17,7 @@ namespace Akka.CQRS.Pricing.Actors
     public sealed class PriceVolumeViewActor : ReceiveActor, IWithUnboundedStash
     {
         private readonly string _tickerSymbol;
+        private ICancelable _pruneTimer;
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
         // the Cluster.Sharding proxy
@@ -28,6 +29,12 @@ namespace Akka.CQRS.Pricing.Actors
         private IActorRef _tickerEntity;
         private PriceHistory _history;
         private readonly string _priceTopic;
+
+        private sealed class Prune
+        {
+            public static readonly Prune Instance = new Prune();
+            private Prune() { }
+        }
 
         public PriceVolumeViewActor(string tickerSymbol, IActorRef priceActorGateway, IActorRef mediator)
         {
@@ -87,12 +94,19 @@ namespace Akka.CQRS.Pricing.Actors
 
             Receive<GetPriceHistory>(h =>
             {
-                Sender.Tell(h);
+                Sender.Tell(_history);
             });
 
-            
+            Receive<GetLatestPrice>(_ =>
+            {
+                Sender.Tell(_history.CurrentPriceUpdate);
+            });
 
             Receive<PriceAndVolumeSnapshot>(_ => { }); // ignore
+
+            // purge older price update entries.
+            Receive<Prune>(_ => { _history = _history.Prune(DateTimeOffset.UtcNow.AddMinutes(-5)); });
+
             Receive<Terminated>(t =>
             {
                 if (t.ActorRef.Equals(_tickerEntity))
@@ -110,6 +124,13 @@ namespace Akka.CQRS.Pricing.Actors
         {
             Context.SetReceiveTimeout(TimeSpan.FromSeconds(5.0));
             _priceActorGateway.Tell(new FetchPriceAndVolume(_tickerSymbol));
+            _pruneTimer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromMinutes(5),
+                TimeSpan.FromMinutes(5), Self, Prune.Instance, ActorRefs.NoSender);
+        }
+
+        protected override void PostStop()
+        {
+            _pruneTimer.Cancel();
         }
     }
 }

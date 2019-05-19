@@ -1,5 +1,4 @@
-﻿using System;
-using Petabridge.Cmd;
+﻿using Petabridge.Cmd;
 
 namespace Akka.CQRS.Pricing.Cli
 {
