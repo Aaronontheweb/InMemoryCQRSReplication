@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS.Infrastructure\Akka.CQRS.Infrastructure.csproj" />
     <ProjectReference Include="..\Akka.CQRS.Pricing.Actors\Akka.CQRS.Pricing.Actors.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing.Cli\Akka.CQRS.Pricing.Cli.csproj" />
   </ItemGroup>
 
 </Project>

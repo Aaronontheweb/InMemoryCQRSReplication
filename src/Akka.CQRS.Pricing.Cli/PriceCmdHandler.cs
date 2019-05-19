@@ -9,11 +9,11 @@ namespace Akka.CQRS.Pricing.Cli
     /// <summary>
     /// The <see cref="PetabridgeCmd"/> command palette handelr for <see cref="PricingCmd.PricingCommandPalette"/>.
     /// </summary>
-    public sealed class PriceCmdHandler : CommandPaletteHandler
+    public sealed class PriceCommands : CommandPaletteHandler
     {
         private IActorRef _priceViewMaster;
 
-        public PriceCmdHandler(IActorRef priceViewMaster) : base(PricingCommandPalette)
+        public PriceCommands(IActorRef priceViewMaster) : base(PricingCommandPalette)
         {
             _priceViewMaster = priceViewMaster;
             HandlerProps = Props.Create(() => new PriceCmdRouter(_priceViewMaster));
