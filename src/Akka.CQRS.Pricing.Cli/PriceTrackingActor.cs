@@ -91,6 +91,11 @@ namespace Akka.CQRS.Pricing.Cli
             Context.Watch(_priceViewActor);
         }
 
+        protected override void PostStop()
+        {
+            _priceCheckInterval.Cancel();
+        }
+
         public IStash Stash { get; set; }
     }
 }
