@@ -1,4 +1,4 @@
-version: '3.0'
+version: '3.7'
 
 services:
   mongo:    
@@ -66,6 +66,10 @@ services:
 
   pricing-engine:
     image: akka.cqrs.pricing
+    deploy:
+      replicas: 3
+    ports:
+      - '0:9110'
     environment:
       CLUSTER_SEEDS: "akka.tcp://AkkaPricing@lighthouse_pricing:4054"
       CLUSTER_PORT: 6055

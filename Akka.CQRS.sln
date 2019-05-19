@@ -41,7 +41,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing", "src\Ak
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Actors", "src\Akka.CQRS.Pricing.Actors\Akka.CQRS.Pricing.Actors.csproj", "{F6F32FB5-332F-48C1-8EC4-3FBD313BA411}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Pricing.Service", "src\Akka.CQRS.Pricing.Service\Akka.CQRS.Pricing.Service.csproj", "{ABB3AA71-9C0E-4455-9631-5D59031A8885}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Service", "src\Akka.CQRS.Pricing.Service\Akka.CQRS.Pricing.Service.csproj", "{ABB3AA71-9C0E-4455-9631-5D59031A8885}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Pricing.Cli", "src\Akka.CQRS.Pricing.Cli\Akka.CQRS.Pricing.Cli.csproj", "{333F7F76-8429-487D-BEC8-1AE57ABC7D49}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,6 +103,10 @@ Global
 		{ABB3AA71-9C0E-4455-9631-5D59031A8885}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{ABB3AA71-9C0E-4455-9631-5D59031A8885}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{ABB3AA71-9C0E-4455-9631-5D59031A8885}.Release|Any CPU.Build.0 = Release|Any CPU
+		{333F7F76-8429-487D-BEC8-1AE57ABC7D49}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{333F7F76-8429-487D-BEC8-1AE57ABC7D49}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{333F7F76-8429-487D-BEC8-1AE57ABC7D49}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{333F7F76-8429-487D-BEC8-1AE57ABC7D49}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,6 +125,7 @@ Global
 		{A14AB205-AEF1-47ED-9836-D241D69889C4} = {C60F4548-6FFD-4D0E-B8C3-6CD6BC8FBC2C}
 		{F6F32FB5-332F-48C1-8EC4-3FBD313BA411} = {C60F4548-6FFD-4D0E-B8C3-6CD6BC8FBC2C}
 		{ABB3AA71-9C0E-4455-9631-5D59031A8885} = {C60F4548-6FFD-4D0E-B8C3-6CD6BC8FBC2C}
+		{333F7F76-8429-487D-BEC8-1AE57ABC7D49} = {C60F4548-6FFD-4D0E-B8C3-6CD6BC8FBC2C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B99E6BB8-642A-4A68-86DF-69567CBA700A}

@@ -9,6 +9,7 @@ using Akka.Cluster.Tools.Singleton;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Pricing.Actors;
+using Akka.CQRS.Pricing.Cli;
 using Akka.Persistence.MongoDb.Query;
 using Akka.Persistence.Query;
 using Akka.Util;
@@ -42,6 +43,7 @@ namespace Akka.CQRS.Pricing.Service
 
             var actorSystem = ActorSystem.Create("AkkaPricing", conf.BootstrapFromDocker());
             var readJournal = actorSystem.ReadJournalFor<MongoDbReadJournal>(MongoDbReadJournal.Identifier);
+            var priceViewMaster = actorSystem.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
 
             Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
             {
@@ -58,20 +60,29 @@ namespace Akka.CQRS.Pricing.Service
                     ClusterSingletonManagerSettings.Create(
                         actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
 
-                var mediator = DistributedPubSub.Get(actorSystem).Mediator;
-
-                foreach (var stock in AvailableTickerSymbols.Symbols)
-                {
-                    actorSystem.ActorOf(Props.Create(() => new PriceVolumeViewActor(stock, shardRegion, mediator)),
-                        stock + "-view");
-                }
+                // start the creation of the pricing views
+                priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
             });
 
             // start Petabridge.Cmd (for external monitoring / supervision)
             var pbm = PetabridgeCmd.Get(actorSystem);
-            pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
-            pbm.RegisterCommandPalette(RemoteCommands.Instance);
+            void RegisterPalette(CommandPaletteHandler h)
+            {
+                if (pbm.RegisterCommandPalette(h))
+                {
+                    Console.WriteLine("Petabridge.Cmd - Registered {0}", h.Palette.ModuleName);
+                }
+                else
+                {
+                    Console.WriteLine("Petabridge.Cmd - DID NOT REGISTER {0}", h.Palette.ModuleName);
+                }
+            }
+
+
+            RegisterPalette(ClusterCommands.Instance);
+            RegisterPalette(RemoteCommands.Instance);
+            RegisterPalette(ClusterShardingCommands.Instance);
+            RegisterPalette(new PriceCommands(priceViewMaster));
             pbm.Start();
 
             actorSystem.WhenTerminated.Wait();

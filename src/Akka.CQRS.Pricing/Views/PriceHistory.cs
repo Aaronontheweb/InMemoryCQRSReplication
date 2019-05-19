@@ -22,9 +22,11 @@ namespace Akka.CQRS.Pricing.Views
 
         public DateTimeOffset From => HistoricalPrices[0].Timestamp;
 
-        public DateTimeOffset Until => HistoricalPrices.Last().Timestamp;
+        public DateTimeOffset Until => CurrentPriceUpdate.Timestamp;
 
-        public decimal CurrentPrice => HistoricalPrices.Last().CurrentAvgPrice;
+        public decimal CurrentPrice => CurrentPriceUpdate.CurrentAvgPrice;
+
+        public IPriceUpdate CurrentPriceUpdate => HistoricalPrices.Last();
 
         public TimeSpan Range => Until - From;
 

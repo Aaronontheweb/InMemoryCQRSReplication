@@ -42,5 +42,10 @@ namespace Akka.CQRS.Pricing.Events
             }
             throw new ArgumentException();
         }
+
+        public override string ToString()
+        {
+            return $"[{StockId}][{Timestamp}] - $[{CurrentAvgPrice}]";
+        }
     }
 }
