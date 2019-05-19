@@ -9,6 +9,7 @@ using Akka.Cluster.Tools.Singleton;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Pricing.Actors;
+using Akka.CQRS.Pricing.Cli;
 using Akka.Persistence.MongoDb.Query;
 using Akka.Persistence.Query;
 using Akka.Util;
@@ -68,6 +69,7 @@ namespace Akka.CQRS.Pricing.Service
             pbm.RegisterCommandPalette(ClusterCommands.Instance);
             pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
             pbm.RegisterCommandPalette(RemoteCommands.Instance);
+            pbm.RegisterCommandPalette(new PriceCommands(priceViewMaster));
             pbm.Start();
 
             actorSystem.WhenTerminated.Wait();

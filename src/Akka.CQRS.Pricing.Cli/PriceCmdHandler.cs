@@ -1,15 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text;
-using Petabridge.Cmd;
+using Akka.Actor;
 using Petabridge.Cmd.Host;
+using static Akka.CQRS.Pricing.Cli.PricingCmd;
 
 namespace Akka.CQRS.Pricing.Cli
 {
-    public sealed class PriceCmdRouter : CommandHandlerActor
+    /// <summary>
+    /// The <see cref="PetabridgeCmd"/> command palette handelr for <see cref="PricingCmd.PricingCommandPalette"/>.
+    /// </summary>
+    public sealed class PriceCmdHandler : CommandPaletteHandler
     {
-        public PriceCmdRouter(CommandPalette commands) : base(commands)
+        private IActorRef _priceViewMaster;
+
+        public PriceCmdHandler(IActorRef priceViewMaster) : base(PricingCommandPalette)
         {
+            _priceViewMaster = priceViewMaster;
+            HandlerProps = Props.Create(() => new PriceCmdRouter(_priceViewMaster));
         }
+
+        public override Props HandlerProps { get; }
     }
 }
