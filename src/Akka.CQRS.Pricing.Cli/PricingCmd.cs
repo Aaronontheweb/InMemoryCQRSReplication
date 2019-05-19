@@ -9,12 +9,16 @@ namespace Akka.CQRS.Pricing.Cli
     {
         public static readonly CommandDefinition TrackPrice = new CommandDefinitionBuilder()
             .WithName("track").WithDescription("Track the live changes in price for a given ticker symbol continuously. Press Control + C to exit.")
-            .WithArgument(b => b.IsMandatory(true).WithName("symbol").WithSwitch("-s").WithSwitch("-S").WithSwitch("--symbol").WithDefaultValues(AvailableTickerSymbols.Symbols))
+            .WithArgument(b => b.IsMandatory(true).WithName("symbol").WithSwitch("-s").WithSwitch("-S").WithSwitch("--symbol")
+                .WithDefaultValues(AvailableTickerSymbols.Symbols)
+                .WithDescription("The ticker symbol for the stock."))
             .Build();
 
         public static readonly CommandDefinition PriceHistory = new CommandDefinitionBuilder()
             .WithName("history").WithDescription("Get the historical price history for the specified ticker symbol")
-            .WithArgument(b => b.IsMandatory(true).WithName("symbol").WithSwitch("-s").WithSwitch("-S").WithSwitch("--symbol").WithDefaultValues(AvailableTickerSymbols.Symbols))
+            .WithArgument(b => b.IsMandatory(true).WithName("symbol").WithSwitch("-s").WithSwitch("-S").WithSwitch("--symbol")
+                .WithDefaultValues(AvailableTickerSymbols.Symbols)
+                .WithDescription("The ticker symbol for the stock."))
             .Build();
 
         public static readonly CommandPalette PricingCommandPalette = new CommandPalette("price", new []{ TrackPrice, PriceHistory });
