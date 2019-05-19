@@ -66,6 +66,8 @@ services:
 
   pricing-engine:
     image: akka.cqrs.pricing
+    ports:
+      - '0:9110'
     environment:
       CLUSTER_SEEDS: "akka.tcp://AkkaPricing@lighthouse_pricing:4054"
       CLUSTER_PORT: 6055
