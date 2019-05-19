@@ -66,10 +66,23 @@ namespace Akka.CQRS.Pricing.Service
 
             // start Petabridge.Cmd (for external monitoring / supervision)
             var pbm = PetabridgeCmd.Get(actorSystem);
-            pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
-            pbm.RegisterCommandPalette(RemoteCommands.Instance);
-            pbm.RegisterCommandPalette(new PriceCommands(priceViewMaster));
+            void RegisterPalette(CommandPaletteHandler h)
+            {
+                if (pbm.RegisterCommandPalette(h))
+                {
+                    Console.WriteLine("Petabridge.Cmd - Registered {0}", h.Palette.ModuleName);
+                }
+                else
+                {
+                    Console.WriteLine("Petabridge.Cmd - DID NOT REGISTER {0}", h.Palette.ModuleName);
+                }
+            }
+
+
+            RegisterPalette(ClusterCommands.Instance);
+            RegisterPalette(RemoteCommands.Instance);
+            RegisterPalette(ClusterShardingCommands.Instance);
+            RegisterPalette(new PriceCommands(priceViewMaster));
             pbm.Start();
 
             actorSystem.WhenTerminated.Wait();
