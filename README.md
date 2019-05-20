@@ -69,6 +69,8 @@ public sealed class StockEventTagger : IWriteEventAdapter
 }
 ```
 
+> The `Tagged` class is a built-in type in Akka.Persistence, and it's explicitly intended for use in combination with Akka.Persistence.Query. If you wrap your saved events inside `Tagged`, those events will still be replayed as their underlying types inside your persistent actors. For instance, a `Match` event saved inside a `Tagged` class will still be replayed as a `Match` event inside the `Recover` methods in your `PersistentActor`s.
+
 The `IStockEventTagger` is used by the Trading Services at the time when an `IWithStockId` event is persisted to automatically apply a relevant Akka.Persistence "tag" to that event, in this case we tag both the ticker symbol ("MSFT", "AMD", "FB", etc) and the type of event ("bid", "match", "ask", or "fill".)
 
 We configure this `IWriteEventAdapter` to run automatically behind the scenes in the Trading Services via [Akka.Persistence HOCON](src/Akka.CQRS.TradeProcessor.Service/app.conf#L27-L45) so we don't have to inject this decorator code directly into our persistent actors themselves:
