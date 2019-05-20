@@ -4,6 +4,12 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Description>Shared, non-domain-specific infrastructure used by various Akka.NET services.</Description>
   </PropertyGroup>
+  <ItemGroup>
+    <None Remove="Ops\ops.conf" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Ops\ops.conf" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Akka.Cluster.Sharding" Version="$(AkkaVersion)-beta*" />

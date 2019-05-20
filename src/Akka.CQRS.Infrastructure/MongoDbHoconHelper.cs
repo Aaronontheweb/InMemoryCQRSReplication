@@ -9,7 +9,7 @@ namespace Akka.CQRS.Infrastructure
     /// </summary>
     public static class MongoDbHoconHelper
     {
-        public static Config GetMongoHocon(string connectionStr)
+        public static Configuration.Config GetMongoHocon(string connectionStr)
         {
             var mongoHocon = @"akka.persistence.journal.mongodb.connection-string = """ + connectionStr + @"""
                                 akka.persistence.snapshot-store.mongodb.connection-string = """ + connectionStr + @"""";
