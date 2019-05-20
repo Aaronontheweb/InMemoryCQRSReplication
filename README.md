@@ -317,6 +317,27 @@ Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
 });
 ```
 
+One final, important thing to note about working with Akka.Cluster.Sharding - _we need to specify the roles that shards are hosted on_. Otherwise Akka.Cluster.Sharding will try to communicate with `ShardRegion` hosts on all nodes in the cluster. You can do this via the `ClusterShardingSettings` class or via the `akka.cluster.sharding` HOCON, which we did in this sample:
+
+```
+akka{
+    # rest of HOCON configuration
+    cluster {
+        #will inject this node as a self-seed node at run-time
+        seed-nodes = ["akka.tcp://AkkaTrader@127.0.0.1:5055"] 
+        roles = ["trade-processor" , "trade-events"]
+
+        pub-sub{
+            role = "trade-events"
+        }
+
+        sharding{
+            role = "trade-processor"
+        }
+    }
+}
+```
+
 **Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding**
 One other major concern we need to address when working with Akka.Cluster.Sharding is ensuring that unreachable nodes in the cluster are downed quickly in the event that they don't recover. In most production scenarios, a node is only unreachable for a brief period of time - typically the result of a temporary network partition, therefore nodes usually recover back to a reachable state rather quickly. 
 
@@ -346,7 +367,7 @@ var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(m
     .WithFallback(DistributedPubSub.DefaultConfig());
 ```
 
-When this is used in combination with Akka.Cluster.Sharding the split brain resolver guarantees that no entity in a `ShardRegion` will be unavailable for longer than the split brain resolver's downing duration. This works
+When this is used in combination with Akka.Cluster.Sharding the split brain resolver guarantees that no entity in a `ShardRegion` will be unavailable for longer than the split brain resolver's downing duration. This works because whenever an unreachable `ShardRegion` node is DOWNed, all of its shards will be automatically re-allocated onto one or more of the other available `ShardRegion` host nodes remaining in the cluster. It provides automatic fault-tolerance even in the case of total loss of availability for one or more affected nodes.
 
 ### Trading Services Domain
 The write-side cluster, the Trading Services are primarily interested in the placement and matching of new trade orders for buying and selling of specific stocks.
