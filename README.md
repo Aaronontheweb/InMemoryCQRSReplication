@@ -209,5 +209,8 @@ Command<EventEnvelope>(e =>
 
 The `MatchAggregateSnapshot` is saved later when a `PublishEvents` message is received by this same actor - but we're always updating the `QueryOffset` value inside this actor and that's what we use in the `IEventsByTagQuery` when this actor starts up. It's key to keeping the turn-around times short on resuming queries for actors that have long trade histories.
 
+#### Akka.Cluster.Sharding and Message Routing
+In both the Trading and Pricing Services domains, we make heavy use of Akka.Cluster.Sharding in order to guarantee that there's a single instance of a particular domain entity present in the cluster at any given time.
+
 ### Trading Services Domain
 The write-side cluster, the Trading Services are primarily interested in the placement and matching of new trade orders for buying and selling of specific stocks.
