@@ -338,7 +338,8 @@ akka{
 }
 ```
 
-**Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding**
+#### Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding
+
 One other major concern we need to address when working with Akka.Cluster.Sharding is ensuring that unreachable nodes in the cluster are downed quickly in the event that they don't recover. In most production scenarios, a node is only unreachable for a brief period of time - typically the result of a temporary network partition, therefore nodes usually recover back to a reachable state rather quickly. 
 
 However, in the event of an issue like an outright hardware failure, a process crash, or an unclean shutdown (not letting the node leave the cluster gracefully prior to termination) then these "unreachable" nodes are truly permanently unavailable. Therefore, we should remove those nodes from the cluster's membership. Today you can do this manually with a tool like [Petabridge.Cmd.Cluster](https://cmd.petabridge.com/articles/commands/cluster-commands.html) via the `cluster down-unreachable` command, but a better method for accomplishing this is to [use the built-in Split Brain Resolvers inside Akka.Cluster](https://getakka.net/articles/clustering/split-brain-resolver.html).
