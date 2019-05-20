@@ -603,3 +603,66 @@ This actor uses Akka.Persistence.Query's `IPersistenceIdsQuery` to fetch a list 
 > Akka.Cluster.Sharding has a built-in feature that should [keep these entity actors alive automatically once they're started for the first time, but need to move to another cluster: `akka.cluster.sharding.remember-entities = true`.](https://getakka.net/articles/clustering/cluster-sharding.html#remembering-entities)
 
 ## Running Akka.CQRS
+Akka.CQRS can be run easily using Docker and `docker-compose`. You'll want to make sure you have [Docker for Windows](https://docs.docker.com/docker-for-windows/) installed with Linux containers enabled if you're running on a Windows PC.
+
+First, clone this repository and run the [`build.cmd` script](build.cmd) in the root of this repository:
+
+```
+PS> ./build.cmd docker
+```
+
+The `docker` build stage will create three Docker images locally:
+
+* `akka.cqrs.tradeprocessor`
+* `akka.cqrs.traders`
+* `akka.cqrs.pricing`
+
+All of these Docker images will be tagged with the `latest` tag and the version number found at the topmost entry of [`RELEASE_NOTES.md`](RELEASE_NOTES.md).
+
+From there, we can start up both cluster via `docker-compose`:
+
+```
+PS> docker-compose up
+```
+
+This will create both clusters, the MongoDb database they depend on, and will also expose the Pricing node's `Petabridge.Cmd.Host` port on a randomly available port. [See the `docker-compose.yaml` file for details](docker-compose.yaml).
+
+### Testing the Consistency and Failover Capabilities of Akka.CQRS
+If you want to test the consistency and fail-over capabilities of this sample, then start by [installing the `pbm` commandline tool](https://cmd.petabridge.com/articles/install/index.html):
+
+```
+PS> dotnet tool install --global pbm 
+```
+
+Next, connect to the first one of the pricing nodes we have running inside of Docker. If you're using [Kitematic, part of Docker for Windows](https://kitematic.com/), you can see the random port that the `akka.cqrs.pricing` containers expose their port on by clicking on the running container instance and going to **Networking**:
+
+![Docker for Windows host container networking](/docs/images/docker-for-windows-networking.png)
+
+Connect to `Petabridge.Cmd` on this node via the following command:
+
+```
+PS> pbm 127.0.0.1:32773 (in this instance - your port number will be chosen at random by docker)
+```
+
+Once you're connected, you'll be able to access all sorts of information about this Pricing node, including [accessing some customer Petabridge.Cmd palettes designed specifically for accessing stock price information inside this sample](rc/Akka.CQRS.Pricing.Cli).
+
+Go ahead and start a price-tracking command and see how it goes:
+
+```
+pbm> price track -s MSFT
+```
+
+Next, use `docker-compose` to bring up a few more Pricing containers in another terminal window:
+
+```
+PS> docker-compose up scale pricing-engine=4
+```
+
+This will create another 3 containers running the `akka.cqrs.pricing` image - all of them will join the cluster automatically, which you can verify using a `cluster show` command in Petabridge.Cmd.
+
+Once this is done, start two more terminals and _connect to two of the new `akka.cqrs.pricing` nodes you just started_ and execute the same `price track -s MSFT` command. You should see that the stream of updated prices is uniform across all three nodes.
+
+Now go and kill the original node you were connected to - the first one of the `akka.cqrs.pricing` nodes you were connected to. This node definitely has some shards hosted on it, if not all of the shards given how few entities there are, so this will prompt a fail-over to happen and for the sharded entity to move across the cluster. What you should see is that the pricing data for the other two nodes you're connected to remains consistent both before, during, and after the fail-over. It may have taken some time for the new `MatchAggregator` to come online and begin updating prices again, but once it came back online the `PriceVolumeViewActor`s that the Akka.CQRS.Pricing.Cli commands uses were able to re-acquire their pricing information from Akka.Cluster.Sharding and continue running normally.
+
+##### Known Issues
+This sample is currently affected by https://github.com/akkadotnet/akka.net/issues/3414, so you will need to explicitly delete the MongoDb container (not just stop it - DELETE it) every time you restart this Docker cluster from scratch. We're working on fixing that issue and should have a patch for it shortly.
