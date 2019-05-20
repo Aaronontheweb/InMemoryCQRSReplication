@@ -8,6 +8,7 @@ using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Cluster.Tools.Singleton;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
+using Akka.CQRS.Infrastructure.Ops;
 using Akka.CQRS.Pricing.Actors;
 using Akka.CQRS.Pricing.Cli;
 using Akka.Persistence.MongoDb.Query;
@@ -38,6 +39,7 @@ namespace Akka.CQRS.Pricing.Service
 
             var config = File.ReadAllText("app.conf");
             var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
+                .WithFallback(OpsConfig.GetOpsConfig())
                 .WithFallback(ClusterSharding.DefaultConfig())
                 .WithFallback(DistributedPubSub.DefaultConfig());
 

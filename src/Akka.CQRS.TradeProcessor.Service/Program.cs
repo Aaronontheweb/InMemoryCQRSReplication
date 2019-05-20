@@ -6,6 +6,7 @@ using Akka.Cluster.Sharding;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
+using Akka.CQRS.Infrastructure.Ops;
 using Akka.CQRS.TradeProcessor.Actors;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
@@ -32,6 +33,7 @@ namespace Akka.CQRS.TradeProcessor.Service
 
             var config = File.ReadAllText("app.conf");
             var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
+                .WithFallback(OpsConfig.GetOpsConfig())
                 .WithFallback(ClusterSharding.DefaultConfig())
                 .WithFallback(DistributedPubSub.DefaultConfig());
 
