@@ -338,7 +338,8 @@ akka{
 }
 ```
 
-**Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding**
+#### Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding
+
 One other major concern we need to address when working with Akka.Cluster.Sharding is ensuring that unreachable nodes in the cluster are downed quickly in the event that they don't recover. In most production scenarios, a node is only unreachable for a brief period of time - typically the result of a temporary network partition, therefore nodes usually recover back to a reachable state rather quickly. 
 
 However, in the event of an issue like an outright hardware failure, a process crash, or an unclean shutdown (not letting the node leave the cluster gracefully prior to termination) then these "unreachable" nodes are truly permanently unavailable. Therefore, we should remove those nodes from the cluster's membership. Today you can do this manually with a tool like [Petabridge.Cmd.Cluster](https://cmd.petabridge.com/articles/commands/cluster-commands.html) via the `cluster down-unreachable` command, but a better method for accomplishing this is to [use the built-in Split Brain Resolvers inside Akka.Cluster](https://getakka.net/articles/clustering/split-brain-resolver.html).
@@ -371,3 +372,234 @@ When this is used in combination with Akka.Cluster.Sharding the split brain reso
 
 ### Trading Services Domain
 The write-side cluster, the Trading Services are primarily interested in the placement and matching of new trade orders for buying and selling of specific stocks.
+
+![Akka.CQRS Architectural overview](docs/images/akka-cqrs-architectural-overview.png)
+
+The Trading Services are driven primarily through the use of three actor types:
+
+1. [`BidderActor`](src/Akka.CQRS.TradeProcessor.Actors/BidderActor.cs) - runs inside the "Trade Placement" services and randomly bids on a specific stock;
+2. [`AskerActor`](rc/Akka.CQRS.TradeProcessor.Actors/AskerActor.cs) - runs inside the "Trade Placement" services and randomly asks (sells) a specific stock; and
+3. [`OrderBookActor`](src/Akka.CQRS.TradeProcessor.Actors/OrderBookActor.cs) - the most important actor in this scenario, it is hosted on the "Trace Processor" service and it's responsible for matching bids with asks, and when it does it publishes `Match` and `Fill` events across the cluster using `DistributedPubSub`. This is how the `AskerActor` and the `BidderActor` involved in making the trade are notified that their trades have been settled. All events received and produced by the `OrderBookActor` are persisted using Akka.Persistence.MongoDb.
+
+The domain design is relatively simple otherwise and we'd encourage you to look at the code directly for more details about how it all works. 
+
+### Pricing Services Domain
+The read-side cluster, the Pricing Services consume the `Match` events for specific ticker symbols produced by the `OrderBookActor`s inside the Trading Services domain by replaying them over Akka.Persistence.Query.
+
+The [`MatchAggregator` actors hosted inside Akka.Cluster.Sharding on the Pricing Services nodes](src/Akka.CQRS.Pricing.Actors/MatchAggregator.cs) are the ones who actually execute the Akka.Persistence.Query and aggregate the `Match.SettlementPrice` and `Match.Quantity` to produce an estimated, weighted moving average of both volume and price. 
+
+These actors also use `DistributedPubSub` to periodically publish `IPriceUpdate` events out to the rest of the Pricing Services cluster:
+
+```csharp
+Command<PublishEvents>(p =>
+{
+    if (_matchAggregate == null)
+        return;
+
+    var (latestPrice, latestVolume) = _matchAggregate.FetchMetrics(_timestamper);
+
+    // Need to update pricing records prior to persisting our state, since this data is included in
+    // output of SaveAggregateData()
+    _priceUpdates.Add(latestPrice);
+    _volumeUpdates.Add(latestVolume);
+
+    PersistAsync(SaveAggregateData(), snapshot =>
+    {
+        _log.Info("Saved latest price {0} and volume {1}", snapshot.AvgPrice, snapshot.AvgVolume);
+        if (LastSequenceNr % SnapshotEveryN == 0)
+        {
+            SaveSnapshot(snapshot);
+        }
+    });
+
+    // publish updates to in-memory replicas
+    _mediator.Tell(new Publish(_priceTopic, latestPrice));
+    _mediator.Tell(new Publish(_volumeTopic, latestVolume));
+});
+```
+
+#### In-Memory Replication of Price and Volume Data
+One of the innovations used in the Akka.CQRS.Pricing.Service is that we have two different layers available for reads:
+
+![Akka.CQRS In-memory replication](docs/images/akka-cqrs-inmemory-replication.png)
+
+In addition to having source of truth `MatchAggregator` actors, who create pricing projections based on the `Match` events created on the write side of the application, the `MatchAggregator` actors also publish their `IPriceUpdate` and `IVolumeUpdate` events via `DistributedPubSub` to [`PriceVolumeViewActor` instances](/src/Akka.CQRS.Pricing.Actors/PriceViewActor.cs). There's exactly 1 `PriceVolumeViewActor` _on every node inside the Pricing Service Cluster_ for every single ticker symbol available.
+
+This has some interesting performance, consistency, and availability implications:
+
+1. The price of any stock can be queried locally, in-memory at virtually no cost (can process millions of queries per second per node and
+2. In the event that the `MatchAggregator` actor dies and has to be moved to another node (per Akka.Cluster.Sharding's mechanics), the local `PriceVolumeViewActor` instances will still be able to successfully serve requests (they stay available), but at the cost of some consistency since no one is reading new `Match` events coming in from the Trading Services.
+
+The `PriceVolumeViewActor` communicates with the `MatchAggregator` initially through the `ShardRegion` `IActorRef`, but once it's subscribed via `DistributedPubSub` to the `MatchAggregator`'s price updates for the same ticker symbol (i.e. the "MSFT" `PriceVolumeViewActor` subscribes to the "MSFT-price" and "MSFT-volume" events published by the "MSFT" `MatchAggregator`).
+
+In the event that the `MatchAggregator` producing this pricing data dies, the `PriceVolumeViewActor` will re-request the current price and volume snapshot recovered by the new incarnation of the `MatchAggregator` as part of its `PersistentActor` methods - and it will replace its current state using this data:
+
+```csharp
+  /// <summary>
+    /// In-memory, replicated view of the current price and volume for a specific stock.
+    /// </summary>
+    public sealed class PriceVolumeViewActor : ReceiveActor, IWithUnboundedStash
+    {
+        private readonly string _tickerSymbol;
+        private ICancelable _pruneTimer;
+        private readonly ILoggingAdapter _log = Context.GetLogger();
+
+        // the Cluster.Sharding proxy
+        private readonly IActorRef _priceActorGateway;
+
+        // the DistributedPubSub mediator
+        private readonly IActorRef _mediator;
+
+        private IActorRef _tickerEntity;
+        private PriceHistory _history;
+        private readonly string _priceTopic;
+
+        private sealed class Prune
+        {
+            public static readonly Prune Instance = new Prune();
+            private Prune() { }
+        }
+
+        public PriceVolumeViewActor(string tickerSymbol, IActorRef priceActorGateway, IActorRef mediator)
+        {
+            _tickerSymbol = tickerSymbol;
+            _priceActorGateway = priceActorGateway;
+            _priceTopic = PriceTopicHelpers.PriceUpdateTopic(_tickerSymbol);
+            _mediator = mediator;
+            _history = new PriceHistory(_tickerSymbol, ImmutableSortedSet<IPriceUpdate>.Empty);
+
+            WaitingForPriceAndVolume();
+        }
+
+        public IStash Stash { get; set; }
+
+        private void WaitingForPriceAndVolume()
+        {
+            Receive<PriceAndVolumeSnapshot>(s =>
+            {
+                if (s.PriceUpdates.Length == 0) // empty set - no price data yet
+                {
+                    _history = new PriceHistory(_tickerSymbol, ImmutableSortedSet<IPriceUpdate>.Empty);
+                    _log.Info("Received empty price history for [{0}]", _history.StockId);
+                }
+                else
+                {
+                    _history = new PriceHistory(_tickerSymbol, s.PriceUpdates.ToImmutableSortedSet());
+                    _log.Info("Received recent price history for [{0}] - current price is [{1}] as of [{2}]", _history.StockId, _history.CurrentPrice, _history.Until);
+                }
+                
+                _tickerEntity = Sender;
+
+                // DistributedPubSub mediator subscription
+                _mediator.Tell(new Subscribe(_priceTopic, Self));
+            });
+
+            Receive<SubscribeAck>(ack =>
+            {
+                _log.Info("Subscribed to {0} - ready for real-time processing.", _priceTopic);
+                Become(Processing);
+                Context.Watch(_tickerEntity);
+                Context.SetReceiveTimeout(null);
+            });
+
+            Receive<ReceiveTimeout>(_ =>
+            {
+                _log.Warning("Received no initial price values for [{0}] from source of truth after 5s. Retrying..", _tickerSymbol);
+                _priceActorGateway.Tell(new FetchPriceAndVolume(_tickerSymbol));
+            });
+        }
+
+        // rest of actor
+    }   
+}
+```
+
+This in-memory replication technique is extremely useful for improving both latency and availability in any Akka.Cluster application, but it comes at the cost of some consistency.
+
+#### Hydrating All Ticker Symbols in Cluster.Sharding
+One small issue with the design of Akka.Cluster.Sharding is that entity actors are spawned on-demand - when a message is routed from a `ShardRegion` or a `ShardRegionProxy` to a specific entity actor using an `IMessageExtractor` such as the `StockShardMsgRouter`. Given that all of our entity actors need to be awake at all times, initiated by consuming data from Akka.Persistence rather than responding to external events from other actors inside the Pricing Services, how can we ensure that 100% of our ticker symbols are covered?
+
+The answer is through the use of the [`PriceInitiatorActor`](src/Akka.CQRS.Pricing.Actors/PriceInitiatorActor.cs), a [Cluster Singleton actor](https://getakka.net/articles/clustering/cluster-singleton.html) responsible for generating heartbeat messages to initialize the creation of all `MatchAggregator` actors through Akka.Cluster.Sharding:
+
+```csharp
+// <summary>
+/// Intended to be a Cluster Singleton. Responsible for ensuring there's at least one instance
+/// of a <see cref="MatchAggregator"/> for every single persistence id found inside the datastore.
+/// </summary>
+public sealed class PriceInitiatorActor : ReceiveActor
+{
+    private readonly ILoggingAdapter _log = Context.GetLogger();
+    private readonly IPersistenceIdsQuery _tradeIdsQuery;
+    private readonly IActorRef _pricingQueryProxy;
+    private readonly HashSet<string> _tickers = new HashSet<string>();
+
+    /*
+     * Used to periodically ping Akka.Cluster.Sharding and ensure that all pricing
+     * entities are up and producing events for their in-memory replicas over the network.
+     *
+     * Technically, akka.cluster.sharding.remember-entities = on should take care of this
+     * for us in the initial pass, but the impact of having this code is virtually zero
+     * and in the event of a network partition or an error somewhere, will effectively prod
+     * the non-existent entity into action. Worth having it.
+     */
+    private ICancelable _heartbeatInterval;
+
+
+    private class Heartbeat
+    {
+        public static readonly Heartbeat Instance = new Heartbeat();
+        private Heartbeat() { }
+    }
+
+    public PriceInitiatorActor(IPersistenceIdsQuery tradeIdsQuery, IActorRef pricingQueryProxy)
+    {
+        _tradeIdsQuery = tradeIdsQuery;
+        _pricingQueryProxy = pricingQueryProxy;
+
+        Receive<Ping>(p =>
+        {
+            _tickers.Add(p.StockId);
+            _pricingQueryProxy.Tell(p);
+        });
+
+        Receive<Heartbeat>(h =>
+        {
+            foreach (var p in _tickers)
+            {
+                _pricingQueryProxy.Tell(new Ping(p));
+            }
+        });
+
+        Receive<UnexpectedEndOfStream>(end =>
+        {
+            _log.Warning("Received unexpected end of PersistenceIds stream. Restarting.");
+            throw new ApplicationException("Restart me!");
+        });
+    }
+
+    protected override void PreStart()
+    {
+        var mat = Context.Materializer();
+        var self = Self;
+        _tradeIdsQuery.PersistenceIds()
+            .Where(x => x.EndsWith(EntityIdHelper
+                .OrderBookSuffix)) // skip persistence ids belonging to price entities
+            .Select(x => new Ping(EntityIdHelper.ExtractTickerFromPersistenceId(x)))
+            .RunWith(Sink.ActorRef<Ping>(self, UnexpectedEndOfStream.Instance), mat);
+
+        _heartbeatInterval = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(30),
+            TimeSpan.FromSeconds(30), Self, Heartbeat.Instance, ActorRefs.NoSender);
+    }
+
+    protected override void PostStop()
+    {
+        _heartbeatInterval?.Cancel();
+    }
+}
+```
+
+This actor uses Akka.Persistence.Query's `IPersistenceIdsQuery` to fetch a list of all available Akka.Persistence IDs, and it's able to fetch all of the entity ID's specific to `OrderBook` entities in the Trading Service and extract just the stock ticker symbol from them. From there, this actor communicates with the `priceAggregator` ShardRegion and fires a `Ping` message at every single ticker symbol, which is responsible for creating and starting all of the `MatchAggregator` actors if they don't already exist.
+
+> Akka.Cluster.Sharding has a built-in feature that should [keep these entity actors alive automatically once they're started for the first time, but need to move to another cluster: `akka.cluster.sharding.remember-entities = true`.](https://getakka.net/articles/clustering/cluster-sharding.html#remembering-entities)
+
+## Running Akka.CQRS
