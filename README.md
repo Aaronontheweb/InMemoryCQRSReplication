@@ -212,5 +212,16 @@ The `MatchAggregateSnapshot` is saved later when a `PublishEvents` message is re
 #### Akka.Cluster.Sharding and Message Routing
 In both the Trading and Pricing Services domains, we make heavy use of Akka.Cluster.Sharding in order to guarantee that there's a single instance of a particular domain entity present in the cluster at any given time.
 
+A brief overview of Akka.Cluster.Sharding: 
+
+1. Every entity type has its own `ShardRegion` - so in the case of the Trading Services, we have "orderBook" entities - each one representing the order book for a specific stock ticker symbol. In the Pricing Services we have "priceAggregator" entities.
+2. A `ShardRegion` can host an arbitrary number of entity actors, defined using the `Props` passed into the `ClusterSharding.Start` method - each one of these entity actors represents a globally unique entity of their shardRegion type.
+3. The `ShardRegion` aggregates these entity actors underneath parent root actors called "shards" - a shard is just an arbitrarily large number of entity actors grouped together for the purposes of ease-of-distribution across the Cluster. [The `ShardRegion` distributes these shards evenly across the cluster and will re-balance the distribution of shards in the event of a new node joining the cluster or an old node leaving](https://petabridge.com/blog/cluster-sharding-technical-overview-akkadotnet/).
+4. In the event of a `ShardRegion` node becoming unreachable due to a network partition, node of the shards and entity actors on the unreachable node will be moved until that node (a) becomes reachable again or (b) [is marked as DOWN by another node in the cluster and kicked out](https://petabridge.com/blog/proper-care-of-akkadotnet-clusters/). This is done in order to guarantee that there's never more than 1 instance of a given entity actor at any time.
+5. Any entity actors hosted by a `ShardRegion` can be accessed from other non-`ShardRegion` nodes through the use of a `ShardRegionProxy`, a router that uses the same message distribution mechanism as the `ShardRegion`. Therefore, sharded entity actors are always accessible to anyone in the cluster.
+6. In the event that a shard and its entities are moved onto a new node, all of the messages intended for entity actors hosted on the affected shards are buffered by the `ShardRegion` and the `ShardRegionProxy` and released only once the shard actors have been successfully recreated on their new node.
+
+All of these mechanisms are designed to provide a high degree of consistency, fault tolerance, and ease-of-use for Akka.NET users - hence why we make heavy use of Akka.Cluster.Sharding in the Akka.CQRS code sample.
+
 ### Trading Services Domain
 The write-side cluster, the Trading Services are primarily interested in the placement and matching of new trade orders for buying and selling of specific stocks.
