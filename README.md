@@ -223,5 +223,130 @@ A brief overview of Akka.Cluster.Sharding:
 
 All of these mechanisms are designed to provide a high degree of consistency, fault tolerance, and ease-of-use for Akka.NET users - hence why we make heavy use of Akka.Cluster.Sharding in the Akka.CQRS code sample.
 
+The key to making sharding work smoothly across all of the nodes in the cluster, however, is ensuring that the same `IMessageExtractor` implementation is available - which is what we did with the [`StockShardMsgRouter` inside Akka.CQRS.Infrastructure](src/Akka.CQRS.Infrastructure/StockShardMsgRouter.cs):
+
+```csharp
+/// <summary>
+/// Used to route sharding messages to order book actors hosted via Akka.Cluster.Sharding.
+/// </summary>
+public sealed class StockShardMsgRouter : HashCodeMessageExtractor
+{
+    /// <summary>
+    /// 3 nodes hosting order books, 10 shards per node.
+    /// </summary>
+    public const int DefaultShardCount = 30;
+
+    public StockShardMsgRouter() : this(DefaultShardCount)
+    {
+    }
+
+    public StockShardMsgRouter(int maxNumberOfShards) : base(maxNumberOfShards)
+    {
+    }
+
+    public override string EntityId(object message)
+    {
+        if (message is IWithStockId stockMsg)
+        {
+            return stockMsg.StockId;
+        }
+
+        switch (message)
+        {
+            case ConfirmableMessage<Ask> a:
+                return a.Message.StockId;
+            case ConfirmableMessage<Bid> b:
+                return b.Message.StockId;
+            case ConfirmableMessage<Fill> f:
+                return f.Message.StockId;
+            case ConfirmableMessage<Match> m:
+                return m.Message.StockId;
+        }
+
+        return null;
+    }
+}
+```
+
+This message extractor works by extracting the `StockId` property from messages with `IWithStockId` defined, since those are the events and commands we're sending to our sharded entity actors in both the Trading and Pricing services. It's worth noting, however, that we're also making use of the [`IComfirmableMessage`](https://devops.petabridge.com/api/Akka.Persistence.Extras.IConfirmableMessage.html) type from Akka.Persistence.Extras along with the `PersistenceSuperivsor` from that same package, hence why we've added handling for the `ConfirmableMessage<T>` types inside the `StockShardMsgRouter`.
+
+> Rule of thumb: when trying to choose the number of shards you want to have in Akka.Cluster.Sharding, use the following formula: `max # of nodes who can host enities of this type * 10 = shard count`. This will give you a moderate amount of shards and ensure that re-balancing of shards doesn't happen too often and when it does happen it doesn't impact an unacceptably large number of entities all at once.
+
+With this `StockShardMsgRouter` in-hand, we can [start our `ShardRegion` inside the Trading Services' "OrderBook" nodes](src/Akka.CQRS.TradeProcessor.Service/Program.cs#L42-L48):
+
+```csharp
+Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+{
+    var sharding = ClusterSharding.Get(actorSystem);
+
+
+    var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
+        new StockShardMsgRouter());
+});
+```
+
+Or a [`ShardProxy` inside the Trading Service's "Trade Placer" nodes](src/Akka.CQRS.TradePlacers.Service/Program.cs#L32-L55):
+
+```csharp
+Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+{
+    var sharding = ClusterSharding.Get(actorSystem);
+
+
+    var shardRegionProxy = sharding.StartProxy("orderBook", "trade-processor", new StockShardMsgRouter());
+    foreach (var stock in AvailableTickerSymbols.Symbols)
+    {
+        var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
+        var min = (decimal) ThreadLocalRandom.Current.Next(10, 15);
+        var range = new PriceRange(min, 0.0m, max);
+
+
+        // start bidders
+        foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 6)))
+        {
+            actorSystem.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
+        }
+
+
+        // start askers
+        foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 6)))
+        {
+            actorSystem.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
+        }
+    }
+});
+```
+
+**Dealing with Unreachable Nodes and Failover in Akka.Cluster.Sharding**
+One other major concern we need to address when working with Akka.Cluster.Sharding is ensuring that unreachable nodes in the cluster are downed quickly in the event that they don't recover. In most production scenarios, a node is only unreachable for a brief period of time - typically the result of a temporary network partition, therefore nodes usually recover back to a reachable state rather quickly. 
+
+However, in the event of an issue like an outright hardware failure, a process crash, or an unclean shutdown (not letting the node leave the cluster gracefully prior to termination) then these "unreachable" nodes are truly permanently unavailable. Therefore, we should remove those nodes from the cluster's membership. Today you can do this manually with a tool like [Petabridge.Cmd.Cluster](https://cmd.petabridge.com/articles/commands/cluster-commands.html) via the `cluster down-unreachable` command, but a better method for accomplishing this is to [use the built-in Split Brain Resolvers inside Akka.Cluster](https://getakka.net/articles/clustering/split-brain-resolver.html).
+
+Inside the [Akka.CQRS.Infrastructure/Ops folder we have an embedded HOCON file and a utility class for parsing it](src/Akka.CQRS.Infrastructure/Ops) - the HOCON file contains a straight-forward split brain resolver configuration that we standardize across all nodes in both the Trading Services and Pricing Services clusters.
+
+```
+# Akka.Cluster split-brain resolver configurations
+akka.cluster{
+    downing-provider-class = "Akka.Cluster.SplitBrainResolver, Akka.Cluster"
+    split-brain-resolver {
+        active-strategy = keep-majority
+    }
+}
+```
+
+The `keep-majority` strategy works as follows: if there's 10 nodes and 4 suddenly become unreachable, the remaining part of the cluster with 6 nodes still standing kicks the remaining 4 nodes out of the cluster via a DOWN command if those nodes have been unreachable for longer than 45 seconds ([read the documentation for a full explanation of the algorithm, including tie-breakers.](https://getakka.net/articles/clustering/split-brain-resolver.html))
+
+We then ensure via the `OpsConfig` class that this configuration is used _uniformly throughout all of our cluster nodes_, since any of those nodes can be the leader of the cluster and it's the leader who has to execute the split brain resolver strategy code. You can see an example here where we [start up the Pricing Service in its `Program.cs`](https://github.com/Aaronontheweb/InMemoryCQRSReplication/blob/3cbf46da0cf4e9735204c2750e2df9e3bead3eca/src/Akka.CQRS.Pricing.Service/Program.cs#L41-L44):
+
+```csharp
+// get HOCON configuration
+var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
+    .WithFallback(OpsConfig.GetOpsConfig())
+    .WithFallback(ClusterSharding.DefaultConfig())
+    .WithFallback(DistributedPubSub.DefaultConfig());
+```
+
+When this is used in combination with Akka.Cluster.Sharding the split brain resolver guarantees that no entity in a `ShardRegion` will be unavailable for longer than the split brain resolver's downing duration. This works
+
 ### Trading Services Domain
 The write-side cluster, the Trading Services are primarily interested in the placement and matching of new trade orders for buying and selling of specific stocks.

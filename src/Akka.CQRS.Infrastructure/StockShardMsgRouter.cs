@@ -11,9 +11,9 @@ namespace Akka.CQRS.Infrastructure
     public sealed class StockShardMsgRouter : HashCodeMessageExtractor
     {
         /// <summary>
-        /// 5 nodes hosting order books, 10 shards per node.
+        /// 3 nodes hosting order books, 10 shards per node.
         /// </summary>
-        public const int DefaultShardCount = 50;
+        public const int DefaultShardCount = 30;
 
         public StockShardMsgRouter() : this(DefaultShardCount)
         {
