@@ -22,8 +22,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
     {
         public static Props PropsFor(string tickerSymbol)
         {
-            return PersistenceSupervisor.PropsFor((o, l) => new ConfirmableMessageEnvelope(l, tickerSymbol, l),
-                o => o is Bid || o is Ask, Props.Create(() => new OrderBookActor(tickerSymbol)), "orders");
+            return Props.Create(() => new OrderBookActor(tickerSymbol));
         }
 
         /// <summary>
@@ -93,7 +92,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
                     if (@event is Ask)
                     {
                         // need to use the ID of the original sender to satisfy the PersistenceSupervisor
-                        _confirmationActor.Tell(new Confirmation(a.ConfirmationId, a.SenderId));
+                        //_confirmationActor.Tell(new Confirmation(a.ConfirmationId, a.SenderId));
                     }
                     _publisher.Publish(PersistenceId, @event);
 
