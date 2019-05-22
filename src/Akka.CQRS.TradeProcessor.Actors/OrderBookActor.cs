@@ -88,13 +88,13 @@ namespace Akka.CQRS.TradeProcessor.Actors
 
                 PersistAll(persistableEvents, @event =>
                 {
-                    _log.Info("[{0}][{1}] - {2} units @ {3} per unit", PersistenceId, @event.ToTradeEventType(), a.Message.AskQuantity, a.Message.AskPrice);
+                    _log.Info("[{0}][{1}] - {2} units @ {3} per unit", TickerSymbol, @event.ToTradeEventType(), a.Message.AskQuantity, a.Message.AskPrice);
                     if (@event is Ask)
                     {
                         // need to use the ID of the original sender to satisfy the PersistenceSupervisor
                         //_confirmationActor.Tell(new Confirmation(a.ConfirmationId, a.SenderId));
                     }
-                    _publisher.Publish(PersistenceId, @event);
+                    _publisher.Publish(TickerSymbol, @event);
 
                     // Take a snapshot every N messages to optimize recovery time
                     if (LastSequenceNr % SnapshotInterval == 0)
@@ -112,12 +112,12 @@ namespace Akka.CQRS.TradeProcessor.Actors
 
                 PersistAll(persistableEvents, @event =>
                 {
-                    _log.Info("[{0}][{1}] - {2} units @ {3} per unit", PersistenceId, @event.ToTradeEventType(), b.Message.BidQuantity, b.Message.BidPrice);
+                    _log.Info("[{0}][{1}] - {2} units @ {3} per unit", TickerSymbol, @event.ToTradeEventType(), b.Message.BidQuantity, b.Message.BidPrice);
                     if (@event is Bid)
                     {
-                        _confirmationActor.Tell(new Confirmation(b.ConfirmationId, PersistenceId));
+                        //_confirmationActor.Tell(new Confirmation(b.ConfirmationId, PersistenceId));
                     }
-                    _publisher.Publish(PersistenceId, @event);
+                    _publisher.Publish(TickerSymbol, @event);
 
                     // Take a snapshot every N messages to optimize recovery time
                     if (LastSequenceNr % SnapshotInterval == 0)
@@ -134,14 +134,14 @@ namespace Akka.CQRS.TradeProcessor.Actors
                 {
                     try
                     {
-                        var ack = await _subscriptionManager.Subscribe(PersistenceId, sub.Events, sub.Subscriber);
+                        var ack = await _subscriptionManager.Subscribe(sub.TickerSymbol, sub.Events, sub.Subscriber);
                         Context.Watch(sub.Subscriber);
                         sub.Subscriber.Tell(ack);
                     }
                     catch (Exception ex)
                     {
                         _log.Error(ex, "Error while processing subscription {0}", sub);
-                        sub.Subscriber.Tell(new TradeSubscribeNack(TickerSymbol, sub.Events, ex.Message));
+                        sub.Subscriber.Tell(new TradeSubscribeNack(sub.TickerSymbol, sub.Events, ex.Message));
                     }
                 });
 
@@ -149,14 +149,14 @@ namespace Akka.CQRS.TradeProcessor.Actors
             {
                 try
                 {
-                    var ack = await _subscriptionManager.Unsubscribe(PersistenceId, unsub.Events, unsub.Subscriber);
+                    var ack = await _subscriptionManager.Unsubscribe(unsub.TickerSymbol, unsub.Events, unsub.Subscriber);
                     // leave DeathWatch intact, in case actor is still subscribed to additional topics
                     unsub.Subscriber.Tell(ack);
                 }
                 catch (Exception ex)
                 {
                     _log.Error(ex, "Error while processing unsubscribe {0}", unsub);
-                    unsub.Subscriber.Tell(new TradeUnsubscribeNack(TickerSymbol, unsub.Events, ex.Message));
+                    unsub.Subscriber.Tell(new TradeUnsubscribeNack(unsub.TickerSymbol, unsub.Events, ex.Message));
                 }
             });
 
@@ -164,7 +164,7 @@ namespace Akka.CQRS.TradeProcessor.Actors
             {
                 try
                 {
-                    var ack = await _subscriptionManager.Unsubscribe(PersistenceId, t.ActorRef);
+                    var ack = await _subscriptionManager.Unsubscribe(TickerSymbol, t.ActorRef);
                 }
                 catch (Exception ex)
                 {
