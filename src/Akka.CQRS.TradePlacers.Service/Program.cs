@@ -41,13 +41,13 @@ namespace Akka.CQRS.TradePlacers.Service
                     var range = new PriceRange(min, 0.0m, max);
 
                     // start bidders
-                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 6)))
+                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
                     {
                         actorSystem.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
                     }
 
                     // start askers
-                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 6)))
+                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
                     {
                         actorSystem.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
                     }

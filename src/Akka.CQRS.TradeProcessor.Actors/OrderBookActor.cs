@@ -127,6 +127,12 @@ namespace Akka.CQRS.TradeProcessor.Actors
                 });
             });
 
+            Command<SaveSnapshotSuccess>(success =>
+            {
+                //DeleteMessages(success.Metadata.SequenceNr);
+                DeleteSnapshots(new SnapshotSelectionCriteria(success.Metadata.SequenceNr));
+            });
+
             /*
              * Handle subscriptions directly in case we're using in-memory, local pub-sub.
              */

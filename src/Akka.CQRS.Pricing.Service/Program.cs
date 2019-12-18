@@ -49,18 +49,18 @@ namespace Akka.CQRS.Pricing.Service
 
             Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
             {
-                var sharding = ClusterSharding.Get(actorSystem);
+            var sharding = ClusterSharding.Get(actorSystem);
 
-                var shardRegion = sharding.Start("priceAggregator",
-                    s => Props.Create(() => new MatchAggregator(s, readJournal)),
-                    ClusterShardingSettings.Create(actorSystem),
-                    new StockShardMsgRouter());
+            var shardRegion = sharding.Start("priceAggregator",
+                s => Props.Create(() => new MatchAggregator(s, readJournal)),
+                ClusterShardingSettings.Create(actorSystem),
+                new StockShardMsgRouter());
 
-                // used to seed pricing data
-                var singleton = ClusterSingletonManager.Props(
-                    Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
-                    ClusterSingletonManagerSettings.Create(
-                        actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
+            // used to seed pricing data
+            var singleton = ClusterSingletonManager.Props(
+                Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
+                ClusterSingletonManagerSettings.Create(
+                    actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
 
                 // start the creation of the pricing views
                 priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
