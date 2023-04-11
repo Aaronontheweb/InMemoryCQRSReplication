@@ -58,7 +58,7 @@ namespace Akka.CQRS.TradePlacers.Service
             var pbm = PetabridgeCmd.Get(actorSystem);
             pbm.RegisterCommandPalette(ClusterCommands.Instance);
             pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
-            pbm.RegisterCommandPalette(RemoteCommands.Instance);
+            pbm.RegisterCommandPalette(new RemoteCommands());
             pbm.Start();
 
             actorSystem.WhenTerminated.Wait();

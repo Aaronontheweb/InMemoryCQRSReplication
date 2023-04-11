@@ -82,7 +82,7 @@ namespace Akka.CQRS.Pricing.Service
 
 
             RegisterPalette(ClusterCommands.Instance);
-            RegisterPalette(RemoteCommands.Instance);
+            RegisterPalette(new RemoteCommands());
             RegisterPalette(ClusterShardingCommands.Instance);
             RegisterPalette(new PriceCommands(priceViewMaster));
             pbm.Start();

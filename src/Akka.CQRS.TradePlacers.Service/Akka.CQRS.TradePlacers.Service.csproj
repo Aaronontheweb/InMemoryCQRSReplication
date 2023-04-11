@@ -12,10 +12,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Bootstrap.Docker" Version="0.2.1" />
-    <PackageReference Include="Petabridge.Cmd.Cluster" Version="0.6.0" />
-    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="0.6.0-beta" />
-    <PackageReference Include="Petabridge.Cmd.Remote" Version="0.6.0" />
+    <PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
   </ItemGroup>
 
   <ItemGroup>

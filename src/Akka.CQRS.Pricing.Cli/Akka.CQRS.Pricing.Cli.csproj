@@ -5,7 +5,7 @@
     <Description>Petabridge.Cmd palettes for accessing the pricing system.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Petabridge.Cmd.Host" Version="0.6.1" />
+    <PackageReference Include="Petabridge.Cmd.Host" Version="$(PbmVersion)" />
   </ItemGroup>
 
   <ItemGroup>
