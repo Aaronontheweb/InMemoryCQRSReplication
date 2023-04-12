@@ -1,13 +1,14 @@
-FROM microsoft/dotnet:2.1-sdk AS base
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS base
 WORKDIR /app
 
 # should be a comma-delimited list
 ENV CLUSTER_SEEDS "[]"
 ENV CLUSTER_IP ""
 ENV CLUSTER_PORT "6055"
-ENV MONGO_CONNECTION_STR "" #MongoDb connection string for Akka.Persistence
+ENV SQL_CONNECTION_STR "" # SQL connection string for Akka.Persistence.Sql
+ENV SQL_PROVIDER_NAME "" # SQL provider for Akka.Persistence.Sql
 
-COPY ./bin/Release/netcoreapp2.1/publish/ /app
+COPY ./bin/Release/net6.0/publish/ /app
 
 # 9110 - Petabridge.Cmd
 # 6055 - Akka.Cluster

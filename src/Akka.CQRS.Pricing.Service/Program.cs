@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
@@ -11,40 +12,51 @@ using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Infrastructure.Ops;
 using Akka.CQRS.Pricing.Actors;
 using Akka.CQRS.Pricing.Cli;
-using Akka.Persistence.MongoDb.Query;
 using Akka.Persistence.Query;
+using Akka.Persistence.Sql;
+using Akka.Persistence.Sql.Query;
 using Akka.Util;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
-using static Akka.CQRS.Infrastructure.MongoDbHoconHelper;
+using static Akka.CQRS.Infrastructure.SqlDbHoconHelper;
 
 namespace Akka.CQRS.Pricing.Service
 {
-    class Program
+    public static class Program
     {
-        static int Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
-            var mongoConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STR")?.Trim();
-            if (string.IsNullOrEmpty(mongoConnectionString))
+            var sqlConnectionString = Environment.GetEnvironmentVariable("SQL_CONNECTION_STR")?.Trim();
+            if (string.IsNullOrEmpty(sqlConnectionString))
             {
-                Console.WriteLine("ERROR! MongoDb connection string not provided. Can't start.");
+                Console.WriteLine("ERROR! SQL connection string not provided. Can't start.");
                 return -1;
             }
-            else
-            {
-                Console.WriteLine("Connecting to MongoDb at {0}", mongoConnectionString);
-            }
+            Console.WriteLine($"Connecting to SQL server at {sqlConnectionString}");
 
-            var config = File.ReadAllText("app.conf");
-            var conf = ConfigurationFactory.ParseString(config).WithFallback(GetMongoHocon(mongoConnectionString))
+            var sqlProviderName = Environment.GetEnvironmentVariable("SQL_PROVIDER_NAME")?.Trim();
+            if (string.IsNullOrEmpty(sqlProviderName))
+            {
+                Console.WriteLine("ERROR! SQL provider name not provided. Can't start.");
+                return -1;
+            }
+            Console.WriteLine($"Connecting to SQL provider {sqlProviderName}");
+
+            // Need to wait for the SQL server to spin up
+            await Task.Delay(TimeSpan.FromSeconds(15));
+            
+            var config = await File.ReadAllTextAsync("app.conf");
+            var conf = ConfigurationFactory.ParseString(config)
+                .WithFallback(GetSqlHocon(sqlConnectionString, sqlProviderName))
                 .WithFallback(OpsConfig.GetOpsConfig())
                 .WithFallback(ClusterSharding.DefaultConfig())
-                .WithFallback(DistributedPubSub.DefaultConfig());
+                .WithFallback(DistributedPubSub.DefaultConfig())
+                .WithFallback(SqlPersistence.DefaultConfiguration);
 
             var actorSystem = ActorSystem.Create("AkkaPricing", conf.BootstrapFromDocker());
-            var readJournal = actorSystem.ReadJournalFor<MongoDbReadJournal>(MongoDbReadJournal.Identifier);
+            var readJournal = actorSystem.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
             var priceViewMaster = actorSystem.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
 
             Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
