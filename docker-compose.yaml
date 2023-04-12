@@ -5,6 +5,8 @@ services:
     image: mcr.microsoft.com/mssql/server:2019-latest
     hostname: sql
     restart: always
+    ports:
+      - '1633:1433'
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "This!IsOpenSource1"
