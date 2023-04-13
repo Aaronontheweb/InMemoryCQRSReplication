@@ -9,10 +9,11 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
+  <ItemGroup>	  
+	<PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
     <PackageReference Include="Akka.HealthCheck.Persistence" Version="$(AkkaHealthCheckVersion)" />
     <PackageReference Include="Akka.Persistence.Sql" Version="$(AkkaSqlVersion)" />
+	<PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaVersion)" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="$(SqlClientVersion)"/>
     <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />

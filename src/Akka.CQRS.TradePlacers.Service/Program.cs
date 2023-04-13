@@ -3,17 +3,22 @@ using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
+using Akka.Cluster.Hosting;
 using Akka.Cluster.Sharding;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Infrastructure.Ops;
 using Akka.CQRS.TradeProcessor.Actors;
+using Akka.Hosting;
 using Akka.Util;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
+using Microsoft.Extensions.Logging;
 
 namespace Akka.CQRS.TradePlacers.Service
 {
@@ -22,46 +27,66 @@ namespace Akka.CQRS.TradePlacers.Service
         static int Main(string[] args)
         {
             var config = File.ReadAllText("app.conf");
-            var conf = ConfigurationFactory.ParseString(config)
-                .WithFallback(OpsConfig.GetOpsConfig())
-                .WithFallback(ClusterSharding.DefaultConfig())
-                .WithFallback(DistributedPubSub.DefaultConfig());
-
-            var actorSystem = ActorSystem.Create("AkkaTrader", conf.BootstrapFromDocker());
-
-            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            using var host = new HostBuilder()
+            .ConfigureServices((hostContext, services) =>
             {
-                var sharding = ClusterSharding.Get(actorSystem);
 
-                var shardRegionProxy = sharding.StartProxy("orderBook", "trade-processor", new StockShardMsgRouter());
-                foreach (var stock in AvailableTickerSymbols.Symbols)
+                services.AddAkka("AkkaTrader", options =>
                 {
-                    var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
-                    var min = (decimal) ThreadLocalRandom.Current.Next(10, 15);
-                    var range = new PriceRange(min, 0.0m, max);
+                    // Add HOCON configuration from Docker
+                    var conf = ConfigurationFactory.ParseString(config)
+                    .WithFallback(OpsConfig.GetOpsConfig())
+                    .WithFallback(ClusterSharding.DefaultConfig())
+                    .WithFallback(DistributedPubSub.DefaultConfig());
+                    options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
 
-                    // start bidders
-                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                    .WithClustering(new ClusterOptions()
                     {
-                        actorSystem.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
-                    }
-
-                    // start askers
-                    foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                        Roles = new[] { "myRegion" },
+                        SeedNodes = new[] { "akka.tcp://AkkaTrader@localhost:8110" }
+                    })
+                    .WithShardRegionProxy<OrderBookActor>("orderBook", "trade-processor",
+                        new StockShardMsgRouter())
+                    .WithActors((system, registry) =>
                     {
-                        actorSystem.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
-                    }
-                }
-            });
+                        var shardRegionProxy = registry.Get<OrderBookActor>();
+                        foreach (var stock in AvailableTickerSymbols.Symbols)
+                        {
+                            var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
+                            var min = (decimal)ThreadLocalRandom.Current.Next(10, 15);
+                            var range = new PriceRange(min, 0.0m, max);
 
-            // start Petabridge.Cmd (for external monitoring / supervision)
-            var pbm = PetabridgeCmd.Get(actorSystem);
-            pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
-            pbm.RegisterCommandPalette(new RemoteCommands());
-            pbm.Start();
+                            // start bidders
+                            foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                            {
+                                system.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
+                            }
 
-            actorSystem.WhenTerminated.Wait();
+                            // start askers
+                            foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                            {
+                                system.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
+                            }
+                        }
+                    })
+                    .AddPetabridgeCmd(cmd =>
+                    {
+                        cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                        cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                        cmd.RegisterCommandPalette(new RemoteCommands());
+                        cmd.Start();
+                    });
+
+                });
+            })
+            .ConfigureLogging((hostContext, configLogging) =>
+            {
+                configLogging.AddConsole();
+            })
+            .UseConsoleLifetime()
+            .Build();
+            host.Run();
+
             return 0;
         }
     }
