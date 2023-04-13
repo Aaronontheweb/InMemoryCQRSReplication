@@ -40,11 +40,6 @@ namespace Akka.CQRS.TradePlacers.Service
                     .WithFallback(DistributedPubSub.DefaultConfig());
                     options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
 
-                    .WithClustering(new ClusterOptions()
-                    {
-                        Roles = new[] { "myRegion" },
-                        SeedNodes = new[] { "akka.tcp://AkkaTrader@localhost:8110" }
-                    })
                     .WithShardRegionProxy<OrderBookActor>("orderBook", "trade-processor",
                         new StockShardMsgRouter())
                     .WithActors((system, registry) =>
@@ -86,7 +81,7 @@ namespace Akka.CQRS.TradePlacers.Service
             .UseConsoleLifetime()
             .Build();
             host.Run();
-
+            Console.ReadLine();
             return 0;
         }
     }

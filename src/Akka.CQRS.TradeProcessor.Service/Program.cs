@@ -62,14 +62,10 @@ namespace Akka.CQRS.TradeProcessor.Service
                         .WithFallback(ClusterSharding.DefaultConfig())
                         .WithFallback(DistributedPubSub.DefaultConfig())
                         .WithFallback(SqlPersistence.DefaultConfiguration);
-                    options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
-                    .WithClustering(new ClusterOptions()
-                    {
-                        SeedNodes = new[] { "akka.tcp://AkkaTrader@localhost:8110" }
-                    })
+                    options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)                    
                     .WithShardRegion<OrderBookActor>("orderBook", s => OrderBookActor.PropsFor(s),
                         new StockShardMsgRouter(),
-                        new ShardOptions() { StateStoreMode = StateStoreMode.DData, Role = "myRegion" })
+                        new ShardOptions() {  })
                     .AddPetabridgeCmd(cmd =>
                     {
                         Console.WriteLine("   PetabridgeCmd Added");
@@ -88,9 +84,7 @@ namespace Akka.CQRS.TradeProcessor.Service
             .UseConsoleLifetime()
             .Build();
             await host.RunAsync();
-            Console.ReadKey();
-
-            await host.StopAsync();
+            Console.ReadLine();
             return 0;
         }
     }
