@@ -1,20 +1,22 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
-using Akka.Actor;
 using Akka.Bootstrap.Docker;
 using Akka.Cluster.Sharding;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Configuration;
-using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Infrastructure.Ops;
-using Akka.CQRS.TradeProcessor.Actors;
+using Akka.Hosting;
 using Akka.Persistence.Sql;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
 using Petabridge.Cmd.Remote;
 using static Akka.CQRS.Infrastructure.SqlDbHoconHelper;
+using Akka.CQRS.TradeProcessor.Actors;
+using Akka.CQRS.Infrastructure;
 
 namespace Akka.CQRS.TradeProcessor.Service
 {
@@ -40,33 +42,52 @@ namespace Akka.CQRS.TradeProcessor.Service
 
             // Need to wait for the SQL server to spin up
             await Task.Delay(TimeSpan.FromSeconds(15));
-            
+
             var config = await File.ReadAllTextAsync("app.conf");
-            var conf = ConfigurationFactory.ParseString(config)
-                .WithFallback(GetSqlHocon(sqlConnectionString, sqlProviderName))
-                .WithFallback(OpsConfig.GetOpsConfig())
-                .WithFallback(ClusterSharding.DefaultConfig())
-                .WithFallback(DistributedPubSub.DefaultConfig())
-                .WithFallback(SqlPersistence.DefaultConfiguration);;
 
-            var actorSystem = ActorSystem.Create("AkkaTrader", conf.BootstrapFromDocker());
-
-            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            using var host = new HostBuilder()
+            .ConfigureServices((hostContext, services) =>
             {
-                var sharding = ClusterSharding.Get(actorSystem);
+                
+                services.AddAkka("AkkaTrader", options =>
+                {
+                    // Add HOCON configuration from Docker
+                    var conf = ConfigurationFactory.ParseString(config)
+                        .WithFallback(GetSqlHocon(sqlConnectionString, sqlProviderName))
+                        .WithFallback(OpsConfig.GetOpsConfig())
+                        .WithFallback(ClusterSharding.DefaultConfig())
+                        .WithFallback(DistributedPubSub.DefaultConfig())
+                        .WithFallback(SqlPersistence.DefaultConfiguration);
+                     options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
+                     .WithActors((system, registry) =>
+                     {
+                         Cluster.Cluster.Get(system).RegisterOnMemberUp(() =>
+                         {
+                             var sharding = ClusterSharding.Get(system);
 
-                var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(actorSystem),
-                    new StockShardMsgRouter());
-            });
-
-            // start Petabridge.Cmd (for external monitoring / supervision)
-            var pbm = PetabridgeCmd.Get(actorSystem);
-            pbm.RegisterCommandPalette(ClusterCommands.Instance);
-            pbm.RegisterCommandPalette(ClusterShardingCommands.Instance);
-            pbm.RegisterCommandPalette(new RemoteCommands());
-            pbm.Start();
-
-            actorSystem.WhenTerminated.Wait();
+                             var shardRegion = sharding.Start("orderBook", s => OrderBookActor.PropsFor(s), ClusterShardingSettings.Create(system),
+                                 new StockShardMsgRouter());
+                         });
+                     })
+                    .AddPetabridgeCmd(cmd =>
+                    {
+                        Console.WriteLine("   PetabridgeCmd Added");
+                        cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                        cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                        cmd.RegisterCommandPalette(new RemoteCommands());
+                        cmd.Start();
+                    });
+                    
+                });
+            })
+            .ConfigureLogging((hostContext, configLogging) =>
+            {
+                configLogging.AddConsole();
+            })
+            .UseConsoleLifetime()
+            .Build();
+            await host.RunAsync();
+            Console.ReadLine();
             return 0;
         }
     }

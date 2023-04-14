@@ -16,7 +16,8 @@
     <PackageReference Include="Akka.HealthCheck.Persistence" Version="$(AkkaHealthCheckVersion)" />
     <PackageReference Include="Akka.Persistence.Sql" Version="$(AkkaSqlVersion)" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="$(SqlClientVersion)"/>
-    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+	<PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaVersion)" />
+	<PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0.0" />

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Bootstrap.Docker;
+using Akka.Cluster.Hosting;
 using Akka.Cluster.Sharding;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Cluster.Tools.Singleton;
@@ -12,10 +13,14 @@ using Akka.CQRS.Infrastructure;
 using Akka.CQRS.Infrastructure.Ops;
 using Akka.CQRS.Pricing.Actors;
 using Akka.CQRS.Pricing.Cli;
+using Akka.Hosting;
+using Akka.Persistence.Hosting;
 using Akka.Persistence.Query;
 using Akka.Persistence.Sql;
 using Akka.Persistence.Sql.Query;
 using Akka.Util;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Petabridge.Cmd.Cluster;
 using Petabridge.Cmd.Cluster.Sharding;
 using Petabridge.Cmd.Host;
@@ -48,58 +53,80 @@ namespace Akka.CQRS.Pricing.Service
             await Task.Delay(TimeSpan.FromSeconds(15));
             
             var config = await File.ReadAllTextAsync("app.conf");
-            var conf = ConfigurationFactory.ParseString(config)
-                .WithFallback(GetSqlHocon(sqlConnectionString, sqlProviderName))
-                .WithFallback(OpsConfig.GetOpsConfig())
-                .WithFallback(ClusterSharding.DefaultConfig())
-                .WithFallback(DistributedPubSub.DefaultConfig())
-                .WithFallback(SqlPersistence.DefaultConfiguration);
-
-            var actorSystem = ActorSystem.Create("AkkaPricing", conf.BootstrapFromDocker());
-            var readJournal = actorSystem.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
-            var priceViewMaster = actorSystem.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
-
-            Cluster.Cluster.Get(actorSystem).RegisterOnMemberUp(() =>
+            using var host = new HostBuilder()
+            .ConfigureServices((hostContext, services) =>
             {
-            var sharding = ClusterSharding.Get(actorSystem);
 
-            var shardRegion = sharding.Start("priceAggregator",
-                s => Props.Create(() => new MatchAggregator(s, readJournal)),
-                ClusterShardingSettings.Create(actorSystem),
-                new StockShardMsgRouter());
+                services.AddAkka("AkkaPricing", options =>
+                {
+                    // Add HOCON configuration from Docker
+                    var conf = ConfigurationFactory.ParseString(config)                 
+                    .WithFallback(GetSqlHocon(sqlConnectionString, sqlProviderName))                
+                    .WithFallback(OpsConfig.GetOpsConfig())                 
+                    .WithFallback(ClusterSharding.DefaultConfig())                 
+                    .WithFallback(DistributedPubSub.DefaultConfig())                 
+                    .WithFallback(SqlPersistence.DefaultConfiguration);
+                    options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
+                    .WithActors((system, registry) =>
+                    {
+                        var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
+                        registry.Register<PriceViewMaster>(priceViewMaster);
+                        // used to seed pricing data
+                        var readJournal = system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
+                        Cluster.Cluster.Get(system).RegisterOnMemberUp(() =>
+                        {
+                            var sharding = ClusterSharding.Get(system);
 
-            // used to seed pricing data
-            var singleton = ClusterSingletonManager.Props(
-                Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
-                ClusterSingletonManagerSettings.Create(
-                    actorSystem.Settings.Config.GetConfig("akka.cluster.price-singleton")));
+                            var shardRegion = sharding.Start("priceAggregator",
+                                s => Props.Create(() => new MatchAggregator(s, readJournal)),
+                                ClusterShardingSettings.Create(system),
+                                new StockShardMsgRouter());
 
-                // start the creation of the pricing views
-                priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
-            });
+                            // used to seed pricing data
+                            var singleton = ClusterSingletonManager.Props(
+                                Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
+                                ClusterSingletonManagerSettings.Create(
+                                    system.Settings.Config.GetConfig("akka.cluster.price-singleton")));
 
-            // start Petabridge.Cmd (for external monitoring / supervision)
-            var pbm = PetabridgeCmd.Get(actorSystem);
-            void RegisterPalette(CommandPaletteHandler h)
+                            // start the creation of the pricing views
+                            priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
+                        });
+                        
+                    })
+                    .AddPetabridgeCmd(cmd =>
+                    {
+                        void RegisterPalette(CommandPaletteHandler h)
+                        {
+                            if (cmd.RegisterCommandPalette(h))
+                            {
+                                Console.WriteLine("Petabridge.Cmd - Registered {0}", h.Palette.ModuleName);
+                            }
+                            else
+                            {
+                                Console.WriteLine("Petabridge.Cmd - DID NOT REGISTER {0}", h.Palette.ModuleName);
+                            }
+                        }
+                        
+                        var actorSystem = cmd.Sys;
+                        var actorRegistry = ActorRegistry.For(actorSystem);
+                        var priceViewMaster = actorRegistry.Get<PriceViewMaster>();
+
+                        RegisterPalette(ClusterCommands.Instance);
+                        RegisterPalette(new RemoteCommands());
+                        RegisterPalette(ClusterShardingCommands.Instance);
+                        RegisterPalette(new PriceCommands(priceViewMaster));
+                        cmd.Start();
+                    });
+                
+                });
+            })
+            .ConfigureLogging((hostContext, configLogging) =>
             {
-                if (pbm.RegisterCommandPalette(h))
-                {
-                    Console.WriteLine("Petabridge.Cmd - Registered {0}", h.Palette.ModuleName);
-                }
-                else
-                {
-                    Console.WriteLine("Petabridge.Cmd - DID NOT REGISTER {0}", h.Palette.ModuleName);
-                }
-            }
-
-
-            RegisterPalette(ClusterCommands.Instance);
-            RegisterPalette(new RemoteCommands());
-            RegisterPalette(ClusterShardingCommands.Instance);
-            RegisterPalette(new PriceCommands(priceViewMaster));
-            pbm.Start();
-
-            actorSystem.WhenTerminated.Wait();
+                configLogging.AddConsole();
+            })
+            .UseConsoleLifetime()
+            .Build();
+            await host.RunAsync();
             return 0;
         }
     }
