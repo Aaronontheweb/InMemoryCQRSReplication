@@ -39,30 +39,32 @@ namespace Akka.CQRS.TradePlacers.Service
                     .WithFallback(ClusterSharding.DefaultConfig())
                     .WithFallback(DistributedPubSub.DefaultConfig());
                     options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
-
-                    .WithShardRegionProxy<OrderBookActor>("orderBook", "trade-processor",
-                        new StockShardMsgRouter())
                     .WithActors((system, registry) =>
                     {
-                        var shardRegionProxy = registry.Get<OrderBookActor>();
-                        foreach (var stock in AvailableTickerSymbols.Symbols)
+                        Cluster.Cluster.Get(system).RegisterOnMemberUp(() =>
                         {
-                            var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
-                            var min = (decimal)ThreadLocalRandom.Current.Next(10, 15);
-                            var range = new PriceRange(min, 0.0m, max);
+                            var sharding = ClusterSharding.Get(system);
 
-                            // start bidders
-                            foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                            var shardRegionProxy = sharding.StartProxy("orderBook", "trade-processor", new StockShardMsgRouter());
+                            foreach (var stock in AvailableTickerSymbols.Symbols)
                             {
-                                system.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
-                            }
+                                var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
+                                var min = (decimal)ThreadLocalRandom.Current.Next(10, 15);
+                                var range = new PriceRange(min, 0.0m, max);
 
-                            // start askers
-                            foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
-                            {
-                                system.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
+                                // start bidders
+                                foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                                {
+                                    system.ActorOf(Props.Create(() => new BidderActor(stock, range, shardRegionProxy)));
+                                }
+
+                                // start askers
+                                foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                                {
+                                    system.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
+                                }
                             }
-                        }
+                        });
                     })
                     .AddPetabridgeCmd(cmd =>
                     {

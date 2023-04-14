@@ -67,15 +67,32 @@ namespace Akka.CQRS.Pricing.Service
                     .WithFallback(DistributedPubSub.DefaultConfig())                 
                     .WithFallback(SqlPersistence.DefaultConfiguration);
                     options.AddHocon(conf.BootstrapFromDocker(), HoconAddMode.Prepend)
-                    
-                    .WithShardRegion<MatchAggregator>("priceAggregator", (system, registry) =>
+                    .WithActors((system, registry) =>
+                    {
+                        var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
+                        registry.Register<PriceViewMaster>(priceViewMaster);
+                        // used to seed pricing data
+                        var readJournal = system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
+                        Cluster.Cluster.Get(system).RegisterOnMemberUp(() =>
                         {
-                            var readJournal = system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
-                            return s => Props.Create(() => new MatchAggregator(s, readJournal));
-                        },
-                        new StockShardMsgRouter(),
-                        new ShardOptions() {  }
-                    )
+                            var sharding = ClusterSharding.Get(system);
+
+                            var shardRegion = sharding.Start("priceAggregator",
+                                s => Props.Create(() => new MatchAggregator(s, readJournal)),
+                                ClusterShardingSettings.Create(system),
+                                new StockShardMsgRouter());
+
+                            // used to seed pricing data
+                            var singleton = ClusterSingletonManager.Props(
+                                Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
+                                ClusterSingletonManagerSettings.Create(
+                                    system.Settings.Config.GetConfig("akka.cluster.price-singleton")));
+
+                            // start the creation of the pricing views
+                            priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
+                        });
+                        
+                    })
                     .AddPetabridgeCmd(cmd =>
                     {
                         void RegisterPalette(CommandPaletteHandler h)
@@ -99,23 +116,6 @@ namespace Akka.CQRS.Pricing.Service
                         RegisterPalette(ClusterShardingCommands.Instance);
                         RegisterPalette(new PriceCommands(priceViewMaster));
                         cmd.Start();
-                    })
-                    .WithActors((system, registry) =>
-                    {
-                        var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
-                        registry.Register<PriceViewMaster>(priceViewMaster);
-                        // used to seed pricing data
-                        var readJournal = system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier);
-                        var actorRegistry = ActorRegistry.For(system);
-                        var shardRegion = actorRegistry.Get<MatchAggregator>();
-                        var singleton = ClusterSingletonManager.Props(
-                            Props.Create(() => new PriceInitiatorActor(readJournal, shardRegion)),
-                            ClusterSingletonManagerSettings.Create(
-                                system.Settings.Config.GetConfig("akka.cluster.price-singleton")));
-
-                        // start the creation of the pricing views
-                        priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
-
                     });
                 
                 });
