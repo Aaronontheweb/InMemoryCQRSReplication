@@ -14,7 +14,7 @@
   <ItemGroup>
     <PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
     <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
-	<PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaVersion)" />  
+    <PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaHostingVersion)" />  
     <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
   </ItemGroup>
