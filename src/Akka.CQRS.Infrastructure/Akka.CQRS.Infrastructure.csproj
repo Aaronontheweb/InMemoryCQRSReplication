@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Description>Shared, non-domain-specific infrastructure used by various Akka.NET services.</Description>
   </PropertyGroup>
   <ItemGroup>
@@ -12,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Cluster.Sharding" Version="$(AkkaVersion)" />
-    <PackageReference Include="Akka.Persistence.Extras" Version="$(AkkaPersistenceExtrasVersion)" />
+    <PackageReference Include="Akka.Cluster.Sharding" />
+    <PackageReference Include="Akka.Persistence.Extras" />
   </ItemGroup>
 
   <ItemGroup>

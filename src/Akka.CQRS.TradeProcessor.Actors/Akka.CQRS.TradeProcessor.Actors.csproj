@@ -1,14 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
-
   <PropertyGroup>
     <TargetFramework>$(NetStandardVersion)</TargetFramework>
     <Description>Matching engine actors.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Persistence" Version="$(AkkaVersion)" />
-    <PackageReference Include="Akka.Persistence.Extras" Version="$(AkkaPersistenceExtrasVersion)" />
+    <PackageReference Include="Akka.Persistence" />
+    <PackageReference Include="Akka.Persistence.Extras" />
   </ItemGroup>
 
   <ItemGroup>
