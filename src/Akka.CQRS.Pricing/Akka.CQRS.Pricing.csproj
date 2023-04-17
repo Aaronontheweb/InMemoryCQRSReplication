@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
   <PropertyGroup>
     <TargetFramework>$(NetStandardVersion)</TargetFramework>
     <Description>Read-side pricing aggregates and views.</Description>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Petabridge.Collections" Version="1.0.0" />
+    <PackageReference Include="Petabridge.Collections" />
   </ItemGroup>
 
   <ItemGroup>

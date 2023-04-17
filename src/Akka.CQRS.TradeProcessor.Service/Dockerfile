@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS base
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS base
 WORKDIR /app
 
 # should be a comma-delimited list
@@ -8,7 +8,7 @@ ENV CLUSTER_PORT "5055"
 ENV SQL_CONNECTION_STR "" # SQL connection string for Akka.Persistence.Sql
 ENV SQL_PROVIDER_NAME "" # SQL provider for Akka.Persistence.Sql
 
-COPY ./bin/Release/net6.0/publish/ /app
+COPY ./bin/Release/net7.0/publish/ /app
 
 # 9110 - Petabridge.Cmd
 # 5055 - Akka.Cluster
