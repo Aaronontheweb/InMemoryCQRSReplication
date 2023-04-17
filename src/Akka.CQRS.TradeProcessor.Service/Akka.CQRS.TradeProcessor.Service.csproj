@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>$(NetCoreVersion)</TargetFramework>
+    <TargetFramework>$(NetVersion)</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="app.conf">
@@ -10,15 +9,15 @@
     </Content>
   </ItemGroup>
   <ItemGroup>	  
-	<PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
-    <PackageReference Include="Akka.HealthCheck.Persistence" Version="$(AkkaHealthCheckVersion)" />
-    <PackageReference Include="Akka.Persistence.Sql" Version="$(AkkaSqlVersion)" />
-    <PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaHostingVersion)" />
-    <PackageReference Include="Microsoft.Data.SqlClient" Version="$(SqlClientVersion)"/>
-    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
-    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0.0" />
+	<PackageReference Include="Akka.Bootstrap.Docker" />
+    <PackageReference Include="Akka.HealthCheck.Persistence" />
+    <PackageReference Include="Akka.Persistence.Sql" />
+    <PackageReference Include="Akka.Cluster.Hosting" />
+    <PackageReference Include="Microsoft.Data.SqlClient" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" />
+    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" />
+    <PackageReference Include="Petabridge.Cmd.Remote" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Akka.CQRS.Infrastructure\Akka.CQRS.Infrastructure.csproj" />
