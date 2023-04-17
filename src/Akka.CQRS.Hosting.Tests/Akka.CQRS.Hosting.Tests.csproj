@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Remove="app.conf" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="app.conf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Akka.Hosting.TestKit" Version="1.5.2" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
+    <PackageReference Include="Testcontainers.MsSql" Version="3.0.0" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
+    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="3.1.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.CQRS.Infrastructure\Akka.CQRS.Infrastructure.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing.Actors\Akka.CQRS.Pricing.Actors.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing.Cli\Akka.CQRS.Pricing.Cli.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing\Akka.CQRS.Pricing.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Service\Akka.CQRS.TradeProcessor.Service.csproj" />
+    <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
+  </ItemGroup>
+
+</Project>

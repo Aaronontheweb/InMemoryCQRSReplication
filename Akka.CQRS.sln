@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS", "src\Akka.CQRS\Akka.CQRS.csproj", "{E945AABA-2779-41E8-9B43-8898FFD64F22}"
 EndProject
@@ -43,7 +43,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Service",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Cli", "src\Akka.CQRS.Pricing.Cli\Akka.CQRS.Pricing.Cli.csproj", "{333F7F76-8429-487D-BEC8-1AE57ABC7D49}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Infrastructure.Tests", "src\Akka.CQRS.Infrastructure.Tests\Akka.CQRS.Infrastructure.Tests.csproj", "{73E9BD37-D311-42FF-80E5-3E6C38835910}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Infrastructure.Tests", "src\Akka.CQRS.Infrastructure.Tests\Akka.CQRS.Infrastructure.Tests.csproj", "{73E9BD37-D311-42FF-80E5-3E6C38835910}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Hosting.Tests", "src\Akka.CQRS.Hosting.Tests\Akka.CQRS.Hosting.Tests.csproj", "{76E8657F-A821-4E95-8266-05120D87E14B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,6 +109,10 @@ Global
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76E8657F-A821-4E95-8266-05120D87E14B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76E8657F-A821-4E95-8266-05120D87E14B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76E8657F-A821-4E95-8266-05120D87E14B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76E8657F-A821-4E95-8266-05120D87E14B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
