@@ -18,9 +18,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Hosting.TestKit" Version="1.5.2" />
+    <PackageReference Include="Akka.Hosting.TestKit" Version="$(AkkaHostingVersion)" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
     <PackageReference Include="Testcontainers.MsSql" Version="3.0.0" />
+    <PackageReference Include="Akka.Persistence.SqlServer.Hosting" Version="$(AkkaHostingVersion)" />
     <PackageReference Include="xunit" Version="2.4.2" />
     <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
