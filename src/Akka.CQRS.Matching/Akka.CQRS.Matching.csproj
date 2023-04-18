@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(NetStandardVersion)</TargetFramework>
+    <TargetFrameworks>$(NetStandardVersion)</TargetFrameworks>
     <Description>Matching engine logic.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka" Version="$(AkkaVersion)" />
+    <PackageReference Include="Akka" />
   </ItemGroup>
 
   <ItemGroup>

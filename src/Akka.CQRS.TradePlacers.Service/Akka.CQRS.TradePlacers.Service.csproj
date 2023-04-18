@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
+	
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>$(NetCoreVersion)</TargetFramework>
+    <TargetFramework>$(NetVersion)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,11 +12,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Bootstrap.Docker" Version="$(AkkaDockerBootstrapVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
-    <PackageReference Include="Akka.Cluster.Hosting" Version="$(AkkaHostingVersion)" />  
-    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
+    <PackageReference Include="Akka.Bootstrap.Docker" />
+    <PackageReference Include="Petabridge.Cmd.Cluster" />
+    <PackageReference Include="Akka.Cluster.Hosting" />  
+    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" />
+    <PackageReference Include="Petabridge.Cmd.Remote" />
   </ItemGroup>
 
   <ItemGroup>

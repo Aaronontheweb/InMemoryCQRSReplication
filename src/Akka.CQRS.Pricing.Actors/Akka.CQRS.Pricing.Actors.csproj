@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\common.props" />
   <PropertyGroup>
     <TargetFramework>$(NetStandardVersion)</TargetFramework>
     <Description>Pricing analytics actors.</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Persistence.Query" Version="$(AkkaVersion)" />
-    <PackageReference Include="Akka.Persistence.Extras" Version="$(AkkaPersistenceExtrasVersion)" />
+    <PackageReference Include="Akka.Persistence.Query" />
+    <PackageReference Include="Akka.Persistence.Extras" />
   </ItemGroup>
 
   <ItemGroup>
