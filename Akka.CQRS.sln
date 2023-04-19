@@ -45,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Cli", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Infrastructure.Tests", "src\Akka.CQRS.Infrastructure.Tests\Akka.CQRS.Infrastructure.Tests.csproj", "{73E9BD37-D311-42FF-80E5-3E6C38835910}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Akka.CQRS.Hosting.Tests", "src\Akka.CQRS.Hosting.Tests\Akka.CQRS.Hosting.Tests.csproj", "{76E8657F-A821-4E95-8266-05120D87E14B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Hosting.Tests", "src\Akka.CQRS.Hosting.Tests\Akka.CQRS.Hosting.Tests.csproj", "{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -109,10 +109,10 @@ Global
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{73E9BD37-D311-42FF-80E5-3E6C38835910}.Release|Any CPU.Build.0 = Release|Any CPU
-		{76E8657F-A821-4E95-8266-05120D87E14B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{76E8657F-A821-4E95-8266-05120D87E14B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{76E8657F-A821-4E95-8266-05120D87E14B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{76E8657F-A821-4E95-8266-05120D87E14B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -21,6 +21,12 @@
     <PackageVersion Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0.0" />
     <PackageVersion Include="Akka.Cluster.Hosting" Version="$(AkkaHostingVersion)" />
+    <PackageVersion Include="Akka.Hosting.TestKit" Version="$(AkkaHostingVersion)" />
+    <PackageVersion Include="Testcontainers.MsSql" Version="3.0.0" />
+    <PackageVersion Include="Akka.Persistence.SqlServer.Hosting" Version="$(AkkaHostingVersion)" />
+    <PackageVersion Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
+    <PackageVersion Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
+    <PackageVersion Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
   </ItemGroup>
   <!-- Test dependencies -->
   <ItemGroup>
@@ -28,5 +34,6 @@
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="$(TestSdkVersion)" />
     <PackageVersion Include="xunit" Version="$(XunitVersion)" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="$(XunitRunnerVersion)" />
+    <PackageVersion Include="coverlet.collector" Version="3.1.2"/>  
   </ItemGroup>
 </Project>

@@ -1,36 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\common.props" />
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
+    <TargetFramework>net7.0</TargetFramework>
+	  <ImplicitUsings>enable</ImplicitUsings>
+	  <Nullable>enable</Nullable>
 
-    <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
+	  <IsPackable>false</IsPackable>
+	  <IsTestProject>true</IsTestProject>
   </PropertyGroup>
-  <ItemGroup>
-    <None Remove="app.conf" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="app.conf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Akka.Hosting.TestKit" Version="$(AkkaHostingVersion)" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.2" />
-    <PackageReference Include="Testcontainers.MsSql" Version="3.0.0" />
-    <PackageReference Include="Akka.Persistence.SqlServer.Hosting" Version="$(AkkaHostingVersion)" />
-    <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
-    <PackageReference Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+    <PackageReference Include="Akka.Hosting.TestKit" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="Testcontainers.MsSql" />
+    <PackageReference Include="Akka.Persistence.SqlServer.Hosting" />
+    <PackageReference Include="xunit"/>
+    <PackageReference Include="Petabridge.Cmd.Cluster"/>
+    <PackageReference Include="Petabridge.Cmd.Cluster.Sharding" />
+    <PackageReference Include="Petabridge.Cmd.Remote" />
+    <PackageReference Include="xunit.runner.visualstudio">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
+    <PackageReference Include="coverlet.collector">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>

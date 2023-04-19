@@ -2,196 +2,243 @@
 
 using Akka.Actor;
 using Akka.Cluster.Hosting;
-using Akka.Configuration;
 using Akka.Hosting;
 using Akka.CQRS.Infrastructure;
 using Akka.CQRS.TradeProcessor.Actors;
 using Akka.Util;
 using Akka.Persistence.SqlServer.Hosting;
 using Akka.Remote.Hosting;
-using System.Net;
 using FluentAssertions;
-using Akka.Cluster.Sharding;
-using Akka.Cluster.Tools.Singleton;
 using Akka.CQRS.Pricing.Actors;
 using Akka.Persistence.Query;
 using Akka.Persistence.Query.Sql;
-using Microsoft.Win32;
-using static LinqToDB.Reflection.Methods;
+using Petabridge.Cmd.Host;
+using Petabridge.Cmd.Cluster.Sharding;
+using Petabridge.Cmd.Remote;
+using Petabridge.Cmd.Cluster;
+using Akka.CQRS.Pricing.Cli;
+using Microsoft.Extensions.Hosting;
 
 namespace Akka.CQRS.Hosting.Tests
 {
     public class TradeProcessor : Akka.Hosting.TestKit.TestKit
     {
         private readonly string _sqlConnectionString = "Server=sql,1633;User Id=sa;Password=This!IsOpenSource1;TrustServerCertificate=true";
-        private readonly string _sqlProviderName = "SqlServer.2019";
-        private string _configTradeProcessor = ConfigurationFactory.ParseString(@"
-            akka {{
-	actor {{
-		provider = cluster
-	}}
-						
-	remote {{
-		dot-netty.tcp {{
-            hostname = ""127.0.0.1""
-            port = 5055
-        }}
-	}}			
-
-	cluster {{
-		#will inject this node as a self-seed node at run-time
-		seed-nodes = [""akka.tcp://AkkaTrader@127.0.0.1:5055""] 
-		roles = [""trade-processor"" , ""trade-events""]
-
-		pub-sub{{
-			role = ""trade-events""
-		}}
-
-		sharding{{
-			role = ""trade-processor""
-		}}
-	}}
-
-	persistence{{
-		journal {{
-		    plugin = ""akka.persistence.journal.sql""
-		    sql {{
-                event-adapters {{
-                    stock-tagger = ""Akka.CQRS.Infrastructure.StockEventTagger, Akka.CQRS.Infrastructure""
-                }}
-                event-adapter-bindings {{
-                    ""Akka.CQRS.IWithStockId, Akka.CQRS"" = stock-tagger
-                }}
-		    }}
-		}}
-
-		snapshot-store {{
-		    plugin = ""akka.persistence.snapshot-store.sql""
-		}}
-	}}
-}}").ToString();
-        private string _configTradePlacers = ConfigurationFactory.ParseString(@"
-            akka {{
-	actor {{
-		provider = cluster
-	}}
-
-	remote {{
-		dot-netty.tcp {{
-            hostname = ""127.0.0.1""
-            port = 5054
-        }}
-	}}			
-
-	cluster {{
-		#will inject this node as a self-seed node at run-time
-		seed-nodes = [""akka.tcp://AkkaTrader@127.0.0.1:5055""] 
-		roles = [""trader"", ""trade-events""]
-
-		pub-sub{{
-			role = ""trade-events""
-		}}
-
-		sharding{{
-			role = ""trade-processor""
-		}}
-	}}
-}}").ToString();
-        private string _configPricing = ConfigurationFactory.ParseString(@"
-           akka {{
-	actor {{
-		provider = cluster
-	}}
-						
-	remote {{
-		dot-netty.tcp {{
-            hostname = ""127.0.0.1""
-            port = 6055
-        }}
-	}}			
-
-	cluster {{
-		#will inject this node as a self-seed node at run-time
-		seed-nodes = [""akka.tcp://AkkaPricing@127.0.0.1:6055""] 
-		roles = [""pricing-engine"" , ""price-events""]
-
-		pub-sub {{
-			role = ""price-events""
-		}}
-
-		sharding {{
-			role = ""pricing-engine""
-		}}
-
-		price-singleton {{
-			singleton-name = ""price-initiator""
-			role = ""pricing-engine""
-			hand-over-retry-interval = 1s
-			min-number-of-hand-over-retries = 10
-		}}
-	}}
-
-	persistence {{
-		journal {{
-		    plugin = ""akka.persistence.journal.sql""
-		    sql {{
-                event-adapters = {{
-                    stock-tagger = ""Akka.CQRS.Infrastructure.StockEventTagger, Akka.CQRS.Infrastructure""
-                }}
-                event-adapter-bindings = {{
-                    ""Akka.CQRS.IWithStockId, Akka.CQRS"" = stock-tagger
-                }}
-		    }}
-		}}
-
-		snapshot-store {{
-		    plugin = ""akka.persistence.snapshot-store.sql""
-		}}
-	}}
-}}").ToString();
-
+       
+       
         private readonly ITestOutputHelper _output;
         public TradeProcessor(ITestOutputHelper output)
         {
             _output = output;
         }
-        protected override void ConfigureAkka(AkkaConfigurationBuilder builder, IServiceProvider provider)
+        private async Task<IHost> TraderHost()
         {
-            /*builder
-                .AddHocon(_configTradeProcessor, HoconAddMode.Prepend)
-                .WithRemoting(Dns.GetHostName(), 8110)
-                .WithClustering()
-                .WithShardRegion<OrderBookActor>("orderBook",
-                (system, registry, resolver) => s => OrderBookActor.PropsFor(s),
-                new StockShardMsgRouter(), new ShardOptions(){ })
-                .WithSqlServerPersistence(_sqlConnectionString)
-                
-                 .AddPetabridgeCmd(cmd =>
-                 {
-                     _output.WriteLine("   PetabridgeCmd Added");
-                     cmd.RegisterCommandPalette(ClusterCommands.Instance);
-                     cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
-                     cmd.RegisterCommandPalette(new RemoteCommands());
-                     cmd.Start();
-                 })*/
-            ;
-            builder
-                .AddHocon(_configPricing, HoconAddMode.Prepend)
-                .WithClustering()
-                .WithShardRegion<MatchAggregator>("priceAggregator",
-                 (system, registry, resolver) => s => Props.Create(() => new MatchAggregator(s, system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier))),
-                 new StockShardMsgRouter(), new ShardOptions() { })
-                .WithSingleton<PriceInitiatorActor>("price",
-                     (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
-                     new ClusterSingletonOptions() { })
+            var tcs = new TaskCompletionSource();
+            using var cancellationTokenSource = new CancellationTokenSource(TimeSpan.FromSeconds(120));
+
+            var host = new HostBuilder()
+                .ConfigureServices(collection =>
+                {
+                    collection.AddAkka("AkkaTrader", builder  =>
+                    {
+                        #region Trade Processors
+                        builder
+                            .WithRemoting(new RemoteOptions
+                            {
+                                HostName = "127.0.0.1",
+                                PublicHostName = "127.0.0.1",
+                                Port = 5055,
+                                PublicPort = 5055,
+                            })
+                            .WithClustering(new ClusterOptions
+                            {
+                                SeedNodes = new[] { "akka.tcp://AkkaTrader@127.0.0.1:5055" },
+                                Roles = new[] { "trade-processor", "trade-events" }
+                            })
+                            .WithDistributedPubSub("trade-events")
+                            .WithShardRegion<OrderBookActor>("orderBook",
+                            (system, registry, resolver) => s => OrderBookActor.PropsFor(s),
+                            new StockShardMsgRouter(), new ShardOptions()
+                            {
+                                Role = "trade-processor"
+                            })
+                            .WithSqlServerPersistence(_sqlConnectionString, journalBuilder: builder =>
+                            {
+                                builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
+                            })
+                            .AddHocon(@$"akka.persistence.journal.sql.provider-name = SqlServer.2019", HoconAddMode.Prepend)
+                            .AddPetabridgeCmd(cmd =>
+                            {
+                                _output.WriteLine("   PetabridgeCmd Added");
+                                cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                                cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                                cmd.RegisterCommandPalette(new RemoteCommands());
+                                cmd.Start();
+                            });
+                        #endregion
+                    });
+                }).Build();
+
+            await host.StartAsync(cancellationTokenSource.Token);
+            //await Task.Delay(TimeSpan.FromSeconds(120));
+            await (tcs.Task.WaitAsync(cancellationTokenSource.Token));
+
+            return host;
+        }
+        private async Task TraderHostProx()
+        {
+            using var host1 = await TestHelper.CreateHost(builder =>
+            {
+                #region Trade Processors
+                builder
+                .WithRemoting(new RemoteOptions
+                {
+                    HostName = "127.0.0.1",
+                    Port = 5054,
+                })
+                .WithClustering(new ClusterOptions
+                {
+                    SeedNodes = new[] { "akka.tcp://AkkaTrader@127.0.0.1:5055" },
+                    Roles = new[] { "trader", "trade-events" }
+                })
+                .WithDistributedPubSub("trade-events")
+                .WithShardRegionProxy<OrderBookActor>("orderBook", "trade-processor", new StockShardMsgRouter())
                 .WithActors((system, registry) =>
                 {
-                    //var priceViewMaster = Sys.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
-                    //registry.Register<PriceViewMaster>(priceViewMaster);
+                    var order = registry.Get<OrderBookActor>();
+                    foreach (var stock in AvailableTickerSymbols.Symbols)
+                    {
+                        var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
+                        var min = (decimal)ThreadLocalRandom.Current.Next(10, 15);
+                        var range = new PriceRange(min, 0.0m, max);
 
+                        // start bidders                       
+                        foreach (var i in System.Linq.Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                        {
+                            system.ActorOf(Props.Create(() => new BidderActor(stock, range, order)));
+                        }
+                        // start askers                       
+                        foreach (var i in System.Linq.Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
+                        {
+                            system.ActorOf(Props.Create(() => new AskerActor(stock, range, order)));
+                        }
+                    }
+                })
+                .AddPetabridgeCmd(cmd =>
+                {
+                    cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                    cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                    cmd.RegisterCommandPalette(new RemoteCommands());
+                    cmd.Start();
                 });
+                #endregion
+            }, new ClusterOptions() { /*SeedNodes = new[] { "akka.tcp://AkkaTrader@lighthouse:4053" } */}, _output);
+
         }
-        
+        private async Task PriceHost()
+        {
+
+            using var host1 = await TestHelper.CreateHost(builder =>
+            {
+                #region Pricing
+                builder
+                    .WithRemoting(new RemoteOptions
+                    {
+                        HostName = "127.0.0.1",
+                        PublicHostName = "127.0.0.1",
+                        Port = 6055,
+                        PublicPort = 6055,
+                    })
+                    .WithClustering(new ClusterOptions
+                    {
+                        SeedNodes = new[] { "akka.tcp://AkkaPricing@127.0.0.1:6055" },
+                        Roles = new[] { "pricing-engine", "price-events" }
+                    })
+                    .WithDistributedPubSub("price-events")
+                    .WithShardRegion<MatchAggregator>("priceAggregator",
+                     (system, registry, resolver) => s => Props.Create(() => new MatchAggregator(s, system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier))),
+                     new StockShardMsgRouter(), new ShardOptions() { Role = "pricing-engine" })
+                    .WithSingleton<PriceInitiatorActor>("price-initiator",
+                         (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
+                         new ClusterSingletonOptions() { Role = "pricing-engine", LeaseRetryInterval = TimeSpan.FromSeconds(1), BufferSize = 10 })
+                    .WithSqlServerPersistence(_sqlConnectionString, journalBuilder: builder =>
+                    {
+                        builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
+                    })
+                    .AddHocon(@$"akka.persistence.journal.sql.provider-name = SqlServer.2019", HoconAddMode.Prepend)
+                    .AddPetabridgeCmd(cmd =>
+                    {
+                        void RegisterPalette(CommandPaletteHandler h)
+                        {
+                            if (cmd.RegisterCommandPalette(h))
+                            {
+                                _output.WriteLine("Petabridge.Cmd - Registered {0}", h.Palette.ModuleName);
+                            }
+                            else
+                            {
+                                _output.WriteLine("Petabridge.Cmd - DID NOT REGISTER {0}", h.Palette.ModuleName);
+                            }
+                        }
+
+                        var actorSystem = cmd.Sys;
+                        var actorRegistry = ActorRegistry.For(actorSystem);
+                        var priceViewMaster = actorRegistry.Get<PriceViewMaster>();
+
+                        RegisterPalette(ClusterCommands.Instance);
+                        RegisterPalette(new RemoteCommands());
+                        RegisterPalette(ClusterShardingCommands.Instance);
+                        RegisterPalette(new PriceCommands(priceViewMaster));
+                        cmd.Start();
+                    })
+                    .StartActors((system, registry) =>
+                    {
+                        var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
+                        registry.Register<PriceViewMaster>(priceViewMaster);
+
+                    });
+                #endregion
+            }, new ClusterOptions() { /*SeedNodes = new[] { "akka.tcp://AkkaTrader@lighthouse:4053" } */}, _output, "AkkaPricing");
+           
+        }
+        protected override void ConfigureAkka(AkkaConfigurationBuilder builder, IServiceProvider provider)
+        {
+            #region Trade Processors
+            builder
+                .WithRemoting(new RemoteOptions
+                {
+                    HostName = "127.0.0.1",
+                    PublicHostName = "127.0.0.1",
+                    Port = 5055,
+                    PublicPort = 5055,
+                })
+                .WithClustering(new ClusterOptions
+                {
+                    SeedNodes = new[] { "akka.tcp://AkkaTrader@127.0.0.1:5055" },
+                    Roles = new[] { "trade-processor", "trade-events" }
+                })
+                .WithDistributedPubSub("trade-events")
+                .WithShardRegion<OrderBookActor>("orderBook",
+                (system, registry, resolver) => s => OrderBookActor.PropsFor(s),
+                new StockShardMsgRouter(), new ShardOptions()
+                {
+                    Role = "trade-processor"
+                })
+                .WithSqlServerPersistence(_sqlConnectionString, journalBuilder: builder =>
+                {
+                    builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
+                })
+                .AddHocon(@$"akka.persistence.journal.sql.provider-name = SqlServer.2019", HoconAddMode.Prepend)
+                .AddPetabridgeCmd(cmd =>
+                {
+                    _output.WriteLine("   PetabridgeCmd Added");
+                    cmd.RegisterCommandPalette(ClusterCommands.Instance);
+                    cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
+                    cmd.RegisterCommandPalette(new RemoteCommands());
+                    cmd.Start();
+                });
+            #endregion
+        }
+
         [Fact]
         public void Trade_Processor_Test()
         {
@@ -211,43 +258,6 @@ namespace Akka.CQRS.Hosting.Tests
         {
             // arrange
             
-            using var host1 = await TestHelper.CreateHost(builder =>
-            {
-                builder
-               .AddHocon(_configTradePlacers, HoconAddMode.Prepend)
-               .WithClustering()
-               .WithShardRegionProxy<OrderBookActor>("orderBook", "trade-processor", new StockShardMsgRouter())
-               .WithActors((system, registry) =>
-               {
-                   var order = registry.Get<OrderBookActor>();
-                   foreach (var stock in AvailableTickerSymbols.Symbols)
-                   {
-                       var max = (decimal)ThreadLocalRandom.Current.Next(20, 45);
-                       var min = (decimal)ThreadLocalRandom.Current.Next(10, 15);
-                       var range = new PriceRange(min, 0.0m, max);
-
-                       // start bidders
-                       foreach (var i in System.Linq.Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
-                       {
-                           system.ActorOf(Props.Create(() => new BidderActor(stock, range, order)));
-                       }
-
-                       // start askers
-                       foreach (var i in System.Linq.Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
-                       {
-                           system.ActorOf(Props.Create(() => new AskerActor(stock, range, order)));
-                       }
-                   }
-               });
-                /*.AddPetabridgeCmd(cmd =>
-                 {
-                     cmd.RegisterCommandPalette(ClusterCommands.Instance);
-                     cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
-                     cmd.RegisterCommandPalette(new RemoteCommands());
-                     cmd.Start();
-                 })*/
-                ;
-            }, new ClusterOptions() { /*SeedNodes = new[] { "akka.tcp://AkkaTrader@lighthouse:4053" } */}, _output);
             
             
             // act
@@ -264,7 +274,8 @@ namespace Akka.CQRS.Hosting.Tests
         public async Task Trade_Price_Test()
         {
             // arrange
-
+            await TraderHostProx();
+            await PriceHost();
             var shardRegion = ActorRegistry.Get<MatchAggregator>();
             var priceViewMaster = Sys.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
             //registry.Register<PriceViewMaster>(priceViewMaster);
