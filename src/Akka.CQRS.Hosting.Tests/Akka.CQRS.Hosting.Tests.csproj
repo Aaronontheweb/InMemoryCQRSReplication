@@ -9,6 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+	  <PackageReference Include="Akka.Cluster" />
+	  <PackageReference Include="Akka.Cluster.Hosting" />
+	  <PackageReference Include="Akka.Remote.Hosting" />
     <PackageReference Include="Akka.Hosting.TestKit" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
     <PackageReference Include="Testcontainers.MsSql" />
@@ -35,7 +38,6 @@
     <ProjectReference Include="..\Akka.CQRS.Pricing\Akka.CQRS.Pricing.csproj" />
     <ProjectReference Include="..\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj" />
     <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj" />
-    <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Service\Akka.CQRS.TradeProcessor.Service.csproj" />
     <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
   </ItemGroup>
 

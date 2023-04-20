@@ -20,6 +20,8 @@ using Akka.CQRS.Pricing.Cli;
 using Microsoft.Extensions.Hosting;
 using Akka.Cluster.Tools.PublishSubscribe;
 using System.Data;
+using Akka.Event;
+using Akka.TestKit.Xunit2.Internals;
 
 namespace Akka.CQRS.Hosting.Tests
 {
@@ -36,28 +38,16 @@ namespace Akka.CQRS.Hosting.Tests
        
         protected override void ConfigureAkka(AkkaConfigurationBuilder builder, IServiceProvider provider)
         {
-            //builder
-                //.ConfigureTradeProcessor(_sqlConnectionString)
+            builder
+                .ConfigureTradeProcessor(_sqlConnectionString)
                 //.ConfigureTradeProcessorProxy()
                 //.ConfigurePrices()
-                //.WithActors((system, registry) =>
-                //{
-               //     var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
-               //     registry.Register<PriceViewMaster>(priceViewMaster);
-
-                //})
-              //  ;
-        }
-
-        [Fact]
-        public async Task Trade_Processor_Test()
-        {
-            using var host = await TestHelper.CreateHost(builder =>
-            {
-                builder
-                .ConfigureTradeProcessor(_sqlConnectionString)
-                .ConfigureTradeProcessorProxy()
-                .ConfigurePrices()
+                .WithActors((system, registry) =>
+                {
+                    var extSystem = (ExtendedActorSystem)system;
+                    var logger = extSystem.SystemActorOf(Props.Create(() => new TestOutputLogger(_output)));
+                    logger.Tell(new InitializeLogger(system.EventStream));
+                })
                 .AddPetabridgeCmd(cmd =>
                 {
                     cmd.RegisterCommandPalette(ClusterCommands.Instance);
@@ -65,12 +55,16 @@ namespace Akka.CQRS.Hosting.Tests
                     cmd.RegisterCommandPalette(new RemoteCommands());
                     cmd.Start();
                 });
+        }
 
-            }, new ClusterOptions() { /*SeedNodes = new[] { "akka.tcp://AkkaTrader@lighthouse:4053" } */}, _output);
+        [Fact]
+        public async Task Trade_Processor_Test()
+        {
+            
             // arrange
             var orderBook = ActorRegistry.Get<OrderBookActor>();
             var shardRegion = ActorRegistry.Get<MatchAggregator>();
-            var priceViewMaster = Sys.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
+            var priceViewMaster = ActorRegistry.Get<PriceViewMaster>();
             //registry.Register<PriceViewMaster>(priceViewMaster);
             //var priceViewMaster = ActorRegistry.Get<PriceViewMaster>();
             // start the creation of the pricing views
@@ -87,6 +81,8 @@ namespace Akka.CQRS.Hosting.Tests
 
             // assert
             orderBook.Should().NotBeNull();
+            shardRegion.Should().NotBeNull();
+            priceViewMaster.Should().NotBeNull();
             //id.Should().Be("foo");
             //sourceRef.Should().Be(actorRegistry.Get<OrderBookActor>());
         }

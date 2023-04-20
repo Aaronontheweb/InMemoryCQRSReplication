@@ -10,7 +10,8 @@ using Akka.Remote.Hosting;
 using Akka.Persistence.Query;
 using Akka.Util;
 using Akka.Cluster.Sharding;
-namespace Akka.CQRS.Hosting.Tests;
+
+namespace Akka.CQRS.Hosting;
 
 public static class AkkaConfiguration
 {
@@ -20,13 +21,11 @@ public static class AkkaConfiguration
                 .WithRemoting(new RemoteOptions
                 {
                     HostName = "127.0.0.1",
-                    PublicHostName = "127.0.0.1",
-                    Port = 5055,
-                    PublicPort = 5055,
+                    Port = 5054
                 })
                 .WithClustering(new ClusterOptions
                 {
-                    SeedNodes = new[] { "akka.tcp://test@127.0.0.1:5055" },
+                    SeedNodes = new[] { "akka.tcp://AkkaTrader@127.0.0.1:5054" },
                     Roles = new[] { "trade-processor", "trader", "trade-events", "pricing-engine", "price-events" }
                 })
                 .WithDistributedPubSub("trade-events")
@@ -42,7 +41,7 @@ public static class AkkaConfiguration
                 .WithSingleton<PriceInitiatorActor>("price-initiator",
                   (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
                 new ClusterSingletonOptions() { Role = "pricing-engine", LeaseRetryInterval = TimeSpan.FromSeconds(1), BufferSize = 10 })
-
+                
                 .WithSqlServerPersistence(connectionString, journalBuilder: builder =>
                 {
                     builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
@@ -53,6 +52,7 @@ public static class AkkaConfiguration
                     var priceViewMaster = system.ActorOf(Props.Create(() => new PriceViewMaster()), "prices");
                     var shardRegion = registry.Get<MatchAggregator>();
                     registry.Register<PriceViewMaster>(priceViewMaster);
+
                     Cluster.Cluster.Get(system).RegisterOnMemberUp(() =>
                     {
                         var sharding = ClusterSharding.Get(system);

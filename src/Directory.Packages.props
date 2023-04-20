@@ -27,6 +27,8 @@
     <PackageVersion Include="Petabridge.Cmd.Cluster" Version="$(PbmVersion)" />
     <PackageVersion Include="Petabridge.Cmd.Cluster.Sharding" Version="$(PbmVersion)" />
     <PackageVersion Include="Petabridge.Cmd.Remote" Version="$(PbmVersion)" />
+    <PackageVersion Include="Akka.Cluster"  Version="$(AkkaVersion)"/>
+    <PackageVersion Include="Akka.Remote.Hosting" Version="$(AkkaHostingVersion)" />
   </ItemGroup>
   <!-- Test dependencies -->
   <ItemGroup>

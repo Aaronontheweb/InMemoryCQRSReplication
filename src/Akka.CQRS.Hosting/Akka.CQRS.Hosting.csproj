@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Akka.Cluster" />
+		<PackageReference Include="Akka.Cluster.Hosting" />
+		<PackageReference Include="Akka.Remote.Hosting" />
+		<PackageReference Include="Akka.Persistence.SqlServer.Hosting" />
+		<PackageReference Include="Akka.Persistence.Sql" />
+		<PackageReference Include="Petabridge.Cmd.Cluster"/>
+		<PackageReference Include="Petabridge.Cmd.Cluster.Sharding" />
+		<PackageReference Include="Petabridge.Cmd.Remote" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
+	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.CQRS.Infrastructure\Akka.CQRS.Infrastructure.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Matching\Akka.CQRS.Matching.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing.Actors\Akka.CQRS.Pricing.Actors.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing.Cli\Akka.CQRS.Pricing.Cli.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Pricing\Akka.CQRS.Pricing.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.Subscriptions\Akka.CQRS.Subscriptions.csproj" />
+    <ProjectReference Include="..\Akka.CQRS.TradeProcessor.Actors\Akka.CQRS.TradeProcessor.Actors.csproj" />
+    <ProjectReference Include="..\Akka.CQRS\Akka.CQRS.csproj" />
+  </ItemGroup>
+
+</Project>
