@@ -40,51 +40,30 @@ namespace Akka.CQRS.Hosting.Tests
         {
             builder
                 .ConfigureTradeProcessor(_sqlConnectionString)
-                //.ConfigureTradeProcessorProxy()
-                //.ConfigurePrices()
                 .WithActors((system, registry) =>
                 {
                     var extSystem = (ExtendedActorSystem)system;
                     var logger = extSystem.SystemActorOf(Props.Create(() => new TestOutputLogger(_output)));
                     logger.Tell(new InitializeLogger(system.EventStream));
-                })
-                .AddPetabridgeCmd(cmd =>
-                {
-                    cmd.RegisterCommandPalette(ClusterCommands.Instance);
-                    cmd.RegisterCommandPalette(ClusterShardingCommands.Instance);
-                    cmd.RegisterCommandPalette(new RemoteCommands());
-                    cmd.Start();
                 });
         }
 
         [Fact]
-        public async Task Trade_Processor_Test()
+        public void Trade_Processor_Test()
         {
             
             // arrange
             var orderBook = ActorRegistry.Get<OrderBookActor>();
             var shardRegion = ActorRegistry.Get<MatchAggregator>();
             var priceViewMaster = ActorRegistry.Get<PriceViewMaster>();
-            //registry.Register<PriceViewMaster>(priceViewMaster);
-            //var priceViewMaster = ActorRegistry.Get<PriceViewMaster>();
-            // start the creation of the pricing views
-            priceViewMaster.Tell(new PriceViewMaster.BeginTrackPrices(shardRegion));
-            // act
-            //var id = await shardRegion.Ask<string>(new OrderBookActor.GetId("foo"), TimeSpan.FromSeconds(3));
-            // sourceRef = 
-            // await shardRegion.Ask<IActorRef>(new OrderBookActor.GetSourceRef("foo"), TimeSpan.FromSeconds(3));
 
-            // assert
-            //id.Should().Be("foo");
-            //sourceRef.Should().Be(actorRegistry.Get<OrderBookActor>());
             // act
 
             // assert
             orderBook.Should().NotBeNull();
             shardRegion.Should().NotBeNull();
             priceViewMaster.Should().NotBeNull();
-            //id.Should().Be("foo");
-            //sourceRef.Should().Be(actorRegistry.Get<OrderBookActor>());
+            
         }
 
     }

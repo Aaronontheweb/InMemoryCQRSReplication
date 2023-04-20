@@ -27,7 +27,7 @@ public static class AkkaConfiguration
                 .WithClustering(new ClusterOptions
                 {
                     SeedNodes = new[] { "akka.tcp://test@127.0.0.1:5055" },
-                    Roles = new[] { "trade-processor", "trader", "trade-events", "pricing-engine", "price-events" }
+                    Roles = new[] { "trade-processor", "trade-events" }
                 })
                 .WithDistributedPubSub("trade-events")
                 .WithShardRegion<OrderBookActor>("orderBook",
@@ -38,10 +38,10 @@ public static class AkkaConfiguration
                 })
                 .WithShardRegion<MatchAggregator>("priceAggregator",
                  (system, registry, resolver) => s => Props.Create(() => new MatchAggregator(s, system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier))),
-                 new StockShardMsgRouter(), new ShardOptions() { Role = "pricing-engine" })
+                 new StockShardMsgRouter(), new ShardOptions() { Role = "trade-events" })
                 .WithSingleton<PriceInitiatorActor>("price-initiator",
                   (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
-                new ClusterSingletonOptions() { Role = "pricing-engine", LeaseRetryInterval = TimeSpan.FromSeconds(1), BufferSize = 10 })
+                new ClusterSingletonOptions() { Role = "trade-events", LeaseRetryInterval = TimeSpan.FromSeconds(1)})
 
                 .WithSqlServerPersistence(connectionString, journalBuilder: builder =>
                 {
