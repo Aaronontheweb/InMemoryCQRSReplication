@@ -11,7 +11,7 @@ using Petabridge.Cmd.Remote;
 
 public class Program
 {
-    static string _sqlConnectionString = "Data Source=DESKTOP-GUGBB29\\\\SQLEXPRESS;Initial Catalog=Akka;User Id=sa;password=thegospel;MultipleActiveResultSets=True";
+    static string _sqlConnectionString = "Server=sql,1633;User Id=sa;Password=This!IsOpenSource1;TrustServerCertificate=true";
 
     static string clusterSystem = "AkkaTrader";
     public static void Main(params string[] args)
