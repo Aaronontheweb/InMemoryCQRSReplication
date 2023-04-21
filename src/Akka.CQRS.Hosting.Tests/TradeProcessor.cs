@@ -14,7 +14,7 @@ namespace Akka.CQRS.Tests.Hosting
 {
     public class TradeProcessor : Akka.Hosting.TestKit.TestKit
     {
-        private readonly string _sqlConnectionString = "Server=127.0.0.1,1633;User Id=sa;Password=yourStrong(!)Password;";
+        private readonly string _sqlConnectionString = "Server=127.0.0.1,1633;User Id=sa;Password=yourStrong(!)Password;TrustServerCertificate=true";
         #region Docker
         #endregion
         private (MsSqlContainer ms, INetwork network, IContainer lighthouse) _t;
@@ -56,7 +56,7 @@ namespace Akka.CQRS.Tests.Hosting
             orderBook.Should().NotBeNull();
             shardRegion.Should().NotBeNull();
             priceViewMaster.Should().NotBeNull();
-            await Task.Delay(10000);
+            await Task.Delay(30000);
             await TestDispose(_t.ms, _t.network, _t.lighthouse);
         }
 
