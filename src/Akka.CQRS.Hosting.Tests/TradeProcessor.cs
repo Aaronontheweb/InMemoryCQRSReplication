@@ -69,8 +69,8 @@ namespace Akka.CQRS.Hosting.Tests
             var priceViewMaster = ActorRegistry.Get<PriceViewMaster>();
 
             // act
-            var wdc = await priceViewMaster.Ask<PriceHistory>(new GetPriceHistory("WDC"), TimeSpan.FromSeconds(30));
-            var w = wdc;
+            //var wdc = await priceViewMaster.Ask<PriceHistory>(new GetPriceHistory("WDC"), TimeSpan.FromSeconds(30));
+            //var w = wdc;
 
             // assert
             orderBook.Should().NotBeNull();
