@@ -73,7 +73,7 @@ public static class AkkaConfiguration
                             // start askers
                             foreach (var i in Enumerable.Repeat(1, ThreadLocalRandom.Current.Next(1, 2)))
                             {
-                                system.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));
+                               system.ActorOf(Props.Create(() => new AskerActor(stock, range, shardRegionProxy)));                               
                             }
                         }
                         // start the creation of the pricing views

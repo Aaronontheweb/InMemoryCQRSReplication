@@ -13,7 +13,7 @@
     <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup>
-    <AkkaVersion>1.5.2</AkkaVersion>
+    <AkkaVersion>1.5.3</AkkaVersion>
     <AkkaHostingVersion>1.5.2</AkkaHostingVersion>
     <AkkaSqlVersion>1.5.2-beta3</AkkaSqlVersion>
     <AkkaPersistenceExtrasVersion>1.5.1</AkkaPersistenceExtrasVersion>

@@ -14,6 +14,7 @@
 		<PackageReference Include="Akka.Persistence.Sql" />
 		<PackageReference Include="Petabridge.Cmd.Cluster"/>
 		<PackageReference Include="Petabridge.Cmd.Cluster.Sharding" />
+		<PackageReference Include="Testcontainers.MsSql" />
 		<PackageReference Include="Petabridge.Cmd.Remote" />
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" />
 	</ItemGroup>
