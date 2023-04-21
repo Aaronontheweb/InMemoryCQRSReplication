@@ -90,8 +90,7 @@ Target "RunTests" (fun _ ->
         | true -> !! "./src/**/*.Tests.*sproj"
         | _ -> 
               !! "./src/**/*.Tests.*sproj" // if you need to filter specs for Linux vs. Windows, do it here
-              ++ "./src/**/Akka.CQRS.Tests.Hosting.csproj"
-
+              -- "./src/**/*.CQRS.Tests.Hosting.csproj"
     let runSingleProject project =
         let arguments =
             match (hasTeamCity) with
