@@ -20,14 +20,17 @@ public static class AkkaConfiguration
                 .WithRemoting(new RemoteOptions
                 {
                     HostName = "127.0.0.1",
-                    PublicHostName = "127.0.0.1",
                     Port = 5055,
-                    PublicPort = 5055,
                 })
                 .WithClustering(new ClusterOptions
                 {
                     SeedNodes = new[] { "akka.tcp://test@127.0.0.1:5055" },
                     Roles = new[] { "trade-processor", "trade-events" }
+                })
+                
+                .WithSqlServerPersistence(connectionString, journalBuilder: builder =>
+                {
+                    builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
                 })
                 .WithDistributedPubSub("trade-events")
                 .WithShardRegion<OrderBookActor>("orderBook",
@@ -39,14 +42,10 @@ public static class AkkaConfiguration
                 .WithShardRegion<MatchAggregator>("priceAggregator",
                  (system, registry, resolver) => s => Props.Create(() => new MatchAggregator(s, system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier))),
                  new StockShardMsgRouter(), new ShardOptions() { Role = "trade-events" })
-                .WithSingleton<PriceInitiatorActor>("price-initiator",
-                  (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
-                new ClusterSingletonOptions() { Role = "trade-events", LeaseRetryInterval = TimeSpan.FromSeconds(1)})
+                //.WithSingleton<PriceInitiatorActor>("price-initiator",
+                //  (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
+                //new ClusterSingletonOptions() { Role = "trade-events", LeaseRetryInterval = TimeSpan.FromSeconds(1) })
 
-                .WithSqlServerPersistence(connectionString, journalBuilder: builder =>
-                {
-                    builder.AddWriteEventAdapter<StockEventTagger>("stock-tagger", new[] { typeof(IWithStockId) });
-                })
                 .AddHocon(@$"akka.persistence.journal.sql.provider-name = SqlServer.2019", HoconAddMode.Prepend)
                 .WithActors((system, registry) =>
                 {

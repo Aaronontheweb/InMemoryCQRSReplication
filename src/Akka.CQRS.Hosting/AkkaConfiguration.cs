@@ -38,9 +38,9 @@ public static class AkkaConfiguration
                 .WithShardRegion<MatchAggregator>("priceAggregator",
                  (system, registry, resolver) => s => Props.Create(() => new MatchAggregator(s, system.ReadJournalFor<SqlReadJournal>(SqlReadJournal.Identifier))),
                  new StockShardMsgRouter(), new ShardOptions() { Role = "pricing-engine" })
-                .WithSingleton<PriceInitiatorActor>("price-initiator",
+                /*.WithSingleton<PriceInitiatorActor>("price-initiator",
                   (_, _, resolver) => resolver.Props<PriceInitiatorActor>(),
-                new ClusterSingletonOptions() { Role = "pricing-engine", LeaseRetryInterval = TimeSpan.FromSeconds(1), BufferSize = 10 })
+                new ClusterSingletonOptions() { Role = "pricing-engine", LeaseRetryInterval = TimeSpan.FromSeconds(1), BufferSize = 10 })*/
                 
                 .WithSqlServerPersistence(connectionString, journalBuilder: builder =>
                 {
