@@ -1,5 +1,4 @@
-﻿using System;
-using Akka.Cluster.Sharding;
+﻿using Akka.Cluster.Sharding;
 using Akka.CQRS.Events;
 using Akka.Persistence.Extras;
 

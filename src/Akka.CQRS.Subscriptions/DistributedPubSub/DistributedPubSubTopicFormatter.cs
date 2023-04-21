@@ -1,5 +1,4 @@
 ﻿using System;
-using Akka.Cluster.Tools.PublishSubscribe;
 
 namespace Akka.CQRS.Subscriptions.DistributedPubSub
 {

@@ -1,39 +1,19 @@
 ﻿
 
 using Akka.Actor;
-using Akka.Cluster.Hosting;
 using Akka.Hosting;
-using Akka.CQRS.Infrastructure;
 using Akka.CQRS.TradeProcessor.Actors;
-using Akka.Util;
-using Akka.Persistence.SqlServer.Hosting;
-using Akka.Remote.Hosting;
 using FluentAssertions;
 using Akka.CQRS.Pricing.Actors;
-using Akka.Persistence.Query;
-using Akka.Persistence.Query.Sql;
-using Petabridge.Cmd.Host;
-using Petabridge.Cmd.Cluster.Sharding;
-using Petabridge.Cmd.Remote;
-using Petabridge.Cmd.Cluster;
-using Akka.CQRS.Pricing.Cli;
-using Microsoft.Extensions.Hosting;
-using Akka.Cluster.Tools.PublishSubscribe;
-using System.Data;
 using Akka.Event;
 using Akka.TestKit.Xunit2.Internals;
 using DotNet.Testcontainers.Networks;
 using Testcontainers.MsSql;
-using Akka.DistributedData.Durable;
-using System.Text;
-using Akka.CQRS.Pricing.Commands;
-using Akka.CQRS.Pricing.Views;
 
-namespace Akka.CQRS.Hosting.Tests
+namespace Akka.CQRS.Tests.Hosting
 {
     public class TradeProcessor : Akka.Hosting.TestKit.TestKit
     {
-        //https://learn.microsoft.com/en-us/ef/core/what-is-new/ef-core-7.0/breaking-changes#encrypt-true
         private readonly string _sqlConnectionString = "Server=127.0.0.1,1633;User Id=sa;Password=yourStrong(!)Password;";
         #region Docker
         #endregion

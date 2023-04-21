@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS
+﻿namespace Akka.CQRS
 {
     /// <summary>
     /// Marker interface used for routing messages for specific stock IDs

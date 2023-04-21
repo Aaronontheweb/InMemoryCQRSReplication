@@ -1,5 +1,4 @@
-﻿using System;
-using Akka.CQRS.Events;
+﻿using Akka.CQRS.Events;
 using Akka.CQRS.Pricing.Events;
 using Akka.CQRS.Util;
 

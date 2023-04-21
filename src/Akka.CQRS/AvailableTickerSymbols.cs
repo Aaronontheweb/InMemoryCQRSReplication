@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS
+﻿namespace Akka.CQRS
 {
     /// <summary>
     /// The set of available ticker symbols for this demo.

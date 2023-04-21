@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Akka.Actor;
 using Akka.CQRS.Events;
 using Akka.CQRS.Subscriptions;

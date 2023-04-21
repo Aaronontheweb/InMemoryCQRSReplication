@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS.Commands
+﻿namespace Akka.CQRS.Commands
 {
     /// <summary>
     /// Query an order book for the set of recent matches

@@ -45,7 +45,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Pricing.Cli", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Infrastructure.Tests", "src\Akka.CQRS.Infrastructure.Tests\Akka.CQRS.Infrastructure.Tests.csproj", "{73E9BD37-D311-42FF-80E5-3E6C38835910}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Hosting.Tests", "src\Akka.CQRS.Hosting.Tests\Akka.CQRS.Hosting.Tests.csproj", "{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Tests.Hosting", "src\Akka.CQRS.Hosting.Tests\Akka.CQRS.Tests.Hosting.csproj", "{7C8840BD-1665-48F0-AACB-1F93A2ECF9CE}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.CQRS.Hosting", "src\Akka.CQRS.Hosting\Akka.CQRS.Hosting.csproj", "{49287A44-38A3-423E-863D-F92786B097C6}"
 EndProject

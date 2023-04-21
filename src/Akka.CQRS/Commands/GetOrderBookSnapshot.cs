@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS.Commands
+﻿namespace Akka.CQRS.Commands
 {
     /// <summary>
     /// Specifics the level of detail for an OrderBook snapshot.

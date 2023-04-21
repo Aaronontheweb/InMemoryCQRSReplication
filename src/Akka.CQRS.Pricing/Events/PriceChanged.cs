@@ -5,7 +5,6 @@
 // -----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 
 namespace Akka.CQRS.Pricing.Events
 {

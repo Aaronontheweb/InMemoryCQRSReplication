@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS
+﻿namespace Akka.CQRS
 {
     /// <summary>
     /// Utility class for naming some of our persistent entities

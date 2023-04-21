@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Akka.CQRS.Events;
 using FluentAssertions;
 using Xunit;

@@ -10,7 +10,7 @@ using Akka.Remote.Hosting;
 using Akka.Persistence.Query;
 using Akka.Util;
 using Akka.Cluster.Sharding;
-namespace Akka.CQRS.Hosting.Tests;
+namespace Akka.CQRS.Tests.Hosting;
 
 public static class AkkaConfiguration
 {

@@ -1,5 +1,5 @@
 ﻿
-namespace Akka.CQRS.Hosting.Tests;
+namespace Akka.CQRS.Tests.Hosting;
 
 public class XUnitLoggerProvider : ILoggerProvider
 {

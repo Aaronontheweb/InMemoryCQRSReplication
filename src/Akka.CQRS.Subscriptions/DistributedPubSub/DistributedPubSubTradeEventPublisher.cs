@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Text;
-using System.Xml;
-using Akka.Actor;
+﻿using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe;
-using Akka.Util;
 using static Akka.CQRS.Subscriptions.DistributedPubSub.DistributedPubSubTopicFormatter;
 
 namespace Akka.CQRS.Subscriptions.DistributedPubSub

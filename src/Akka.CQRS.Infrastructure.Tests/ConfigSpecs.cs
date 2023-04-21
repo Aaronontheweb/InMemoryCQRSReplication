@@ -1,4 +1,3 @@
-using System;
 using Akka.CQRS.Infrastructure.Ops;
 using FluentAssertions;
 using Xunit;

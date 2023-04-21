@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Akka.Actor;
 using Akka.CQRS.Pricing.Commands;
 using Akka.Event;
-using Akka.Persistence;
 using Akka.Persistence.Query;
 using Akka.Streams;
 using Akka.Streams.Dsl;

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Akka.CQRS.Pricing
+﻿namespace Akka.CQRS.Pricing
 {
     /// <summary>
     ///     Simple data structure for self-contained EMWA mathematics.

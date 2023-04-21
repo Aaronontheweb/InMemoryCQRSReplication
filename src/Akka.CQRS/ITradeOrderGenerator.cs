@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace Akka.CQRS
+﻿namespace Akka.CQRS
 {
     /// <summary>
     /// Generates unique trade order Ids.

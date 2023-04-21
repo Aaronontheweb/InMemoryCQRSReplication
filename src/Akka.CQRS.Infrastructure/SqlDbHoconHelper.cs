@@ -1,7 +1,4 @@
-﻿using System;
-using Akka.Configuration;
-
-namespace Akka.CQRS.Infrastructure
+﻿namespace Akka.CQRS.Infrastructure
 {
     /// <summary>
     /// Shared utility class for formatting SQL connection strings into the required

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using Akka.CQRS.Pricing.Events;
 
 namespace Akka.CQRS.Pricing
