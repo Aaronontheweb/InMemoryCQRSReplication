@@ -87,10 +87,9 @@ module internal ResultHandling =
 Target "RunTests" (fun _ ->
     let projects = 
         match (isWindows) with 
-        | true -> !! "./src/**/*.Tests.*sproj"
-        | _ -> 
-              !! "./src/**/*.Tests.*sproj" // if you need to filter specs for Linux vs. Windows, do it here
-              //-- "./src/**/*.CQRS.Tests.Hosting.csproj"
+        | true -> !! "./src/**/*.Tests.csproj"
+        | _ -> !! "./src/**/*.Tests.csproj" // if you need to filter specs for Linux vs. Windows, do it here
+
     let runSingleProject project =
         let arguments =
             match (hasTeamCity) with
