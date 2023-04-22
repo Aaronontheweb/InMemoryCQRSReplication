@@ -13,14 +13,9 @@ on:
       - main
 
 jobs:
-  test:
-    name: Test-${{matrix.os}}
-    runs-on: ${{matrix.os}}
-
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
+  windows-latest:
+    name: windows-latest
+    runs-on: windows-latest
     steps:
       - name: "Checkout"
         uses: actions/checkout@v3.0.2
@@ -37,6 +32,29 @@ jobs:
 
       - name: "dotnet build"
         run: dotnet build -c Release
-
+        
       - name: "dotnet test"
-        run: dotnet test -c Release
+        run: ./build.cmd RunTests
+        
+  ubuntu-latest:
+    name: ubuntu-latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3.0.2
+        with:
+          lfs: true
+          fetch-depth: 0
+
+      - name: "Install .NET SDK"
+        uses: actions/setup-dotnet@v2.1.0
+        with:
+          dotnet-version: |
+            6.0.x
+          global-json-file: "./global.json"
+
+      - name: "dotnet build"
+        run: dotnet build -c Release
+        
+      - name: "dotnet test"
+        run: ./build.sh RunTests
