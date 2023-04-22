@@ -19,4 +19,4 @@ jobs:
     name: Windows
     vmImage: 'windows-latest'
     scriptFileName: build.cmd
-    scriptArgs: RunTestsWindows
+    scriptArgs: all

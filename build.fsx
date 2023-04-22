@@ -84,30 +84,7 @@ module internal ResultHandling =
         buildErrorMessage
         >> Option.iter (failBuildWithMessage errorLevel)
 
-Target "RunTestsWindows" (fun _ ->
-    let projects = 
-        match (isWindows) with 
-        | true -> !! "./src/**/*.Tests.csproj"
-        | _ -> !! "./src/**/*.Tests.csproj" // if you need to filter specs for Linux vs. Windows, do it here
-
-
-    let runSingleProject project =
-        let arguments =
-            match (hasTeamCity) with
-            | true -> (sprintf "test -c Release --no-build --logger:trx --logger:\"console;verbosity=normal\" --results-directory %s -- -parallel none -teamcity" (outputTests))
-            | false -> (sprintf "test -c Release --no-build --logger:trx --logger:\"console;verbosity=normal\" --results-directory %s -- -parallel none" (outputTests))
-
-        let result = ExecProcess(fun info ->
-            info.FileName <- "dotnet"
-            info.WorkingDirectory <- (Directory.GetParent project).FullName
-            info.Arguments <- arguments) (TimeSpan.FromMinutes 30.0) 
-        
-        ResultHandling.failBuildIfXUnitReportedError TestRunnerErrorLevel.Error result  
-
-    projects |> Seq.iter (log)
-    projects |> Seq.iter (runSingleProject)
-)
-Target "RunTestsUbuntu" (fun _ ->
+Target "RunTests" (fun _ ->
     let projects = 
         match (isWindows) with 
         | true -> !! "./src/**/*.Tests.csproj"
@@ -131,6 +108,7 @@ Target "RunTestsUbuntu" (fun _ ->
     projects |> Seq.iter (log)
     projects |> Seq.iter (runSingleProject)
 )
+
 Target "NBench" <| fun _ ->
     let projects = 
         match (isWindows) with 
@@ -371,8 +349,7 @@ Target "Help" <| fun _ ->
       " * Build         Builds"
       " * Nuget         Create and optionally publish nugets packages"
       " * SignPackages  Signs all NuGet packages, provided that the following arguments are passed into the script: SignClientSecret={secret} and SignClientUser={username}"
-      " * RunTestsWindows      Runs tests"
-      " * RunTestsUbuntu      Runs tests"
+      " * RunTests      Runs tests"
       " * All           Builds, run tests, creates and optionally publish nuget packages"
       " * DocFx         Creates a DocFx-based website for this solution"
       ""
@@ -393,8 +370,7 @@ Target "Nuget" DoNothing
 "Clean" ==> "AssemblyInfo" ==> "Build" ==> "BuildRelease"
 
 // tests dependencies
-"Build" ==> "RunTestsWindows"
-"Build" ==> "RunTestsUbuntu"
+"Build" ==> "RunTests"
 
 // nuget dependencies
 "Clean" ==> "Build" ==> "CreateNuget"
@@ -408,8 +384,7 @@ Target "Nuget" DoNothing
 
 // all
 "BuildRelease" ==> "All"
-"RunTestsWindows" ==> "All"
-"RunTestsUbuntu" ==> "All"
+"RunTests" ==> "All"
 "NBench" ==> "All"
 "Nuget" ==> "All"
 

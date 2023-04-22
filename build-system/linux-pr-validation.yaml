@@ -19,4 +19,4 @@ jobs:
     name: Ubuntu
     vmImage: 'ubuntu-22.04'
     scriptFileName: ./build.sh
-    scriptArgs: RunTestsUbuntu
+    scriptArgs: all
