@@ -57,7 +57,10 @@ namespace Akka.CQRS.Tests.Hosting
             shardRegion.Should().NotBeNull();
             priceViewMaster.Should().NotBeNull();
 
-            await Task.Delay(10000);
+            await Task.Delay(15000);
+            Sys.Stop(orderBook);
+            Sys.Stop(shardRegion);
+            Sys.Stop(priceViewMaster);
             await TestDispose(_t.ms, _t.network, _t.lighthouse);
             await Task.Delay(5000);
         }
