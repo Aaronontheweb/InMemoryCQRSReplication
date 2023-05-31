@@ -25,7 +25,7 @@
     <NBenchCliVersion>1.2.2</NBenchCliVersion>
     <XunitVersion>2.4.2</XunitVersion>
     <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
-    <TestSdkVersion>17.5.0</TestSdkVersion>
+    <TestSdkVersion>17.6.0</TestSdkVersion>
     <FluentAssertionsVersion>6.10.0</FluentAssertionsVersion>
   </PropertyGroup>
   <PropertyGroup>
