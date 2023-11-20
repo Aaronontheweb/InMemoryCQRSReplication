@@ -23,7 +23,7 @@
     <SqlClientVersion>5.1.1</SqlClientVersion>
     <NBenchVersion>2.0.1</NBenchVersion>
     <NBenchCliVersion>1.2.2</NBenchCliVersion>
-    <XunitVersion>2.4.2</XunitVersion>
+    <XunitVersion>2.6.2</XunitVersion>
     <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
     <TestSdkVersion>17.6.3</TestSdkVersion>
     <FluentAssertionsVersion>6.11.0</FluentAssertionsVersion>
