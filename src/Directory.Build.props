@@ -26,7 +26,7 @@
     <XunitVersion>2.6.2</XunitVersion>
     <XunitRunnerVersion>2.4.5</XunitRunnerVersion>
     <TestSdkVersion>17.6.3</TestSdkVersion>
-    <FluentAssertionsVersion>6.11.0</FluentAssertionsVersion>
+    <FluentAssertionsVersion>6.12.0</FluentAssertionsVersion>
   </PropertyGroup>
   <PropertyGroup>
     <NetCoreVersion>net6.0</NetCoreVersion>
