@@ -18,7 +18,7 @@
     <AkkaSqlVersion>1.5.2-beta3</AkkaSqlVersion>
     <AkkaPersistenceExtrasVersion>1.5.1</AkkaPersistenceExtrasVersion>
     <PbmVersion>1.3.1</PbmVersion>
-    <AkkaHealthCheckVersion>1.5.2</AkkaHealthCheckVersion>
+    <AkkaHealthCheckVersion>1.5.12</AkkaHealthCheckVersion>
     <AkkaDockerBootstrapVersion>0.5.3</AkkaDockerBootstrapVersion>
     <SqlClientVersion>5.1.1</SqlClientVersion>
     <NBenchVersion>2.0.1</NBenchVersion>
