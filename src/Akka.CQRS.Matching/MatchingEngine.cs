@@ -16,6 +16,9 @@ namespace Akka.CQRS.Matching
         public static readonly IEnumerable<ITradeEvent> EmptyTradeEvents = new ITradeEvent[0];
         public static readonly IEnumerable<Order> EmptyOrders = new Order[0];
 
+        private static readonly IComparer<Order> HighestPriceFirst =
+            Comparer<Order>.Create((x, y) => OrderPriceComparer.Instance.Compare(y, x));
+
         public MatchingEngine(string stockId, ILoggingAdapter logger = null, ITimestamper timestamper = null)
         : this(stockId, new Dictionary<string, Order>(), new Dictionary<string, Order>(), logger, timestamper)
         {
@@ -201,24 +204,21 @@ namespace Akka.CQRS.Matching
         }
 
         /*
-         * Internal implementation note: these price indicies would not scale
-         * in a real trading system with hundreds of thousands of open orders per symbol,
-         * since we're sorting the entire order-book via LINQ on read.
-         *
-         * Better way to do this would probably be to update the index on write using something
-         * with a constant insertion time, i.e. a Dictionary<price, Order> or something
-         * more along those lines.
+         * These price indices are rebuilt by sorting the entire open order book after
+         * each update, so this approach would not scale to hundreds of thousands of
+         * open orders per symbol. A scalable implementation would update the index
+         * incrementally while retaining every order at the same price.
          */
         private void RebuildAskIndex()
         {
-            // highest possible buy == front of the list
-            AsksByPrice = new SortedSet<Order>(_asks.Values.OrderByDescending(x => x, OrderPriceComparer.Instance));
+            // Lowest ask price first for incoming buy orders.
+            AsksByPrice = new SortedSet<Order>(_asks.Values, OrderPriceComparer.Instance);
         }
 
         private void RebuildBidIndex()
         {
-            // lowest possible sell == front of list
-            BidsByPrice = new SortedSet<Order>(_bids.Values.OrderBy(x => x, OrderPriceComparer.Instance));
+            // Highest bid price first for incoming sell orders.
+            BidsByPrice = new SortedSet<Order>(_bids.Values, HighestPriceFirst);
         }
 
         /// <summary>

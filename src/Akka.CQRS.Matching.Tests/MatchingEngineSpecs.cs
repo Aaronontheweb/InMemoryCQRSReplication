@@ -123,5 +123,59 @@ namespace Akka.CQRS.Matching.Tests
             snapshot.StockId.Should().Be(_matchingEngine.StockId);
             _matchingEngine.AskTrades.Count.Should().Be(2);
         }
+
+        [Fact(DisplayName = "Orders at the same price should remain distinct and match on both sides")]
+        public void MatchingEngine_should_retain_orders_with_equal_prices()
+        {
+            var time = DateTimeOffset.UtcNow;
+
+            var asks = new MatchingEngine(TickerSymbol);
+            asks.WithAsk(new Ask(TickerSymbol, "ask-1", 10.0m, 2.0d, time)).Should().BeEmpty();
+            asks.WithAsk(new Ask(TickerSymbol, "ask-2", 10.0m, 2.0d, time)).Should().BeEmpty();
+            asks.AskTrades.Should().HaveCount(2);
+            asks.AsksByPrice.Should().HaveCount(2);
+
+            var askSideMatches = asks.WithBid(new Bid(TickerSymbol, "bid-1", 10.0m, 4.0d, time))
+                .OfType<Match>()
+                .ToList();
+            askSideMatches.Should().HaveCount(2);
+            asks.AskTrades.Should().BeEmpty();
+            asks.BidTrades.Should().BeEmpty();
+
+            var bids = new MatchingEngine(TickerSymbol);
+            bids.WithBid(new Bid(TickerSymbol, "bid-2", 10.0m, 2.0d, time)).Should().BeEmpty();
+            bids.WithBid(new Bid(TickerSymbol, "bid-3", 10.0m, 2.0d, time)).Should().BeEmpty();
+            bids.BidTrades.Should().HaveCount(2);
+            bids.BidsByPrice.Should().HaveCount(2);
+
+            var bidSideMatches = bids.WithAsk(new Ask(TickerSymbol, "ask-3", 10.0m, 4.0d, time))
+                .OfType<Match>()
+                .ToList();
+            bidSideMatches.Should().HaveCount(2);
+            bids.BidTrades.Should().BeEmpty();
+            bids.AskTrades.Should().BeEmpty();
+        }
+
+        [Fact(DisplayName = "Matching uses the best price first on both sides")]
+        public void MatchingEngine_should_use_best_price_first()
+        {
+            var time = DateTimeOffset.UtcNow;
+
+            var bidBook = new MatchingEngine(TickerSymbol);
+            bidBook.WithBid(new Bid(TickerSymbol, "bid-low", 11.0m, 1.0d, time));
+            bidBook.WithBid(new Bid(TickerSymbol, "bid-high", 12.0m, 1.0d, time));
+            var bidMatch = bidBook.WithAsk(new Ask(TickerSymbol, "ask", 10.0m, 1.0d, time))
+                .OfType<Match>()
+                .Single();
+            bidMatch.BuyOrderId.Should().Be("bid-high");
+
+            var askBook = new MatchingEngine(TickerSymbol);
+            askBook.WithAsk(new Ask(TickerSymbol, "ask-high", 12.0m, 1.0d, time));
+            askBook.WithAsk(new Ask(TickerSymbol, "ask-low", 11.0m, 1.0d, time));
+            var askMatch = askBook.WithBid(new Bid(TickerSymbol, "bid", 13.0m, 1.0d, time))
+                .OfType<Match>()
+                .Single();
+            askMatch.SellOrderId.Should().Be("ask-low");
+        }
     }
 }

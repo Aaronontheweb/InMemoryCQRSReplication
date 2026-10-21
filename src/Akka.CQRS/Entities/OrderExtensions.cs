@@ -10,7 +10,7 @@ using Akka.CQRS.Events;
 namespace Akka.CQRS
 {
     /// <summary>
-    /// Sorts open orders by their price.
+    /// Sorts open orders by price, then order ID to distinguish equal-price orders.
     /// </summary>
     public sealed class OrderPriceComparer : IComparer<Order>
     {
@@ -20,11 +20,11 @@ namespace Akka.CQRS
 
         public int Compare(Order x, Order y)
         {
-            if (x.Price.Equals(y.Price))
-                return 0;
-            if (x.Price < y.Price)
-                return -1;
-            return 1;
+            var priceComparison = x.Price.CompareTo(y.Price);
+            if (priceComparison != 0)
+                return priceComparison;
+
+            return string.CompareOrdinal(x.OrderId, y.OrderId);
         }
     }
 
